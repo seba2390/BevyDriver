@@ -1,0 +1,25 @@
+[package]
+name = "driving_game"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = "0.17"
+rand = "0.9"
+rand_chacha = "0.9"
+
+
+# Fast compile for development
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+# Keep release fast for now - enable LTO later for final builds
+[profile.release]
+opt-level = 3
+# lto = "fat"        # Uncomment for final release
+# codegen-units = 1  # Uncomment for final release
+panic = "abort"
+strip = true
