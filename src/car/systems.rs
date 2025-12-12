@@ -1,6 +1,7 @@
 use crate::car::components::{Car, Velocity};
 use crate::car::constants::*;
 use crate::constants::{BOTTOM_BOUNDARY, LEFT_BOUNDARY, RIGHT_BOUNDARY, TOP_BOUNDARY};
+use crate::menu::components::GameEntity;
 use bevy::prelude::*;
 
 // ============================================================================
@@ -30,6 +31,7 @@ pub fn spawn_car(commands: &mut Commands, starting_point: Vec2) {
         car_initial_position,
         car_initial_velocity,
         car_component,
+        GameEntity,
     ));
 }
 

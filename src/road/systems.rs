@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use crate::car::components::Car;
 use crate::car::constants::CAR_HEIGHT;
 use crate::car::helpers::get_car_corners;
+use crate::menu::components::GameEntity;
 use crate::road::components::{
     Direction, FinishLine, RoadSegment, RoadSegmentType, StartLine, Track,
 };
@@ -31,6 +32,7 @@ pub fn spawn_start_line(commands: &mut Commands, position: Vec2, direction: Dire
         start_line_sprite,
         start_line_transform,
         StartLine { direction },
+        GameEntity,
     ));
 }
 
@@ -47,6 +49,7 @@ pub fn spawn_finish_line(commands: &mut Commands, position: Vec2, direction: Dir
         finish_line_sprite,
         finish_line_transform,
         FinishLine { direction },
+        GameEntity,
     ));
 }
 
@@ -116,7 +119,7 @@ fn spawn_straight_road(
         direction: current_direction,
     };
 
-    commands.spawn((road_sprite, road_transform, road_component));
+    commands.spawn((road_sprite, road_transform, road_component, GameEntity));
 
     // Return the new endpoint (end of this segment)
     current_endpoint + offset
@@ -162,6 +165,7 @@ fn spawn_corner_road(
             segment_type,
             direction: current_direction,
         },
+        GameEntity,
     ));
 
     // The new endpoint is calculated from the pivot.

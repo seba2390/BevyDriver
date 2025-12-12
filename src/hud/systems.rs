@@ -4,6 +4,7 @@ use bevy::time::Stopwatch;
 use crate::car::components::Car;
 use crate::hud::components::{OffRoadText, RaceState, RaceStatus, TimerText};
 use crate::hud::helpers::{format_elapsed_time, has_crossed_line, is_within_line_x_bounds};
+use crate::menu::components::GameEntity;
 use crate::road::components::{Direction, FinishLine, StartLine};
 
 /// Spawns the off-road warning UI element
@@ -24,6 +25,7 @@ pub fn spawn_off_road_ui(commands: &mut Commands) {
         },
         Visibility::Hidden,
         OffRoadText,
+        GameEntity,
     ));
 }
 
@@ -44,6 +46,7 @@ pub fn spawn_timer_ui(commands: &mut Commands) {
             ..default()
         },
         TimerText,
+        GameEntity,
     ));
 }
 
