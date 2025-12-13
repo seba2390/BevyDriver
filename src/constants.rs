@@ -4,6 +4,7 @@ use bevy::prelude::*;
 /// Global game state enum for managing menu and gameplay transitions
 #[derive(Clone, Copy, Default, Eq, PartialEq, Debug, Hash, States)]
 pub enum GameState {
+    // sets the default state to Menu (the main menu screen is shown first on game start)
     #[default]
     Menu,
     Playing,

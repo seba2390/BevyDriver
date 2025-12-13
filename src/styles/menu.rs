@@ -1,0 +1,82 @@
+use bevy::prelude::*;
+
+use crate::styles::colors::*;
+
+// ============================================================================
+// Layout Constants
+// ============================================================================
+
+pub const BUTTON_WIDTH: f32 = 250.0;
+pub const BUTTON_HEIGHT: f32 = 65.0;
+pub const BUTTON_MARGIN: f32 = 20.0;
+pub const TITLE_FONT_SIZE: f32 = 60.0;
+pub const TITLE_MARGIN_BOTTOM: f32 = 50.0;
+pub const BUTTON_FONT_SIZE: f32 = 33.0;
+pub const PANEL_PADDING: f32 = 50.0;
+
+// ============================================================================
+// Layout Builders
+// ============================================================================
+
+/// Full-screen container centered both horizontally and vertically
+pub fn fullscreen_centered() -> Node {
+    Node {
+        width: Val::Percent(100.0),
+        height: Val::Percent(100.0),
+        align_items: AlignItems::Center,
+        justify_content: JustifyContent::Center,
+        ..default()
+    }
+}
+
+/// Vertical column layout with centered children
+pub fn column_centered() -> Node {
+    Node {
+        flex_direction: FlexDirection::Column,
+        align_items: AlignItems::Center,
+        padding: UiRect::all(Val::Px(PANEL_PADDING)),
+        ..default()
+    }
+}
+
+/// Standard menu button layout
+pub fn button_node() -> Node {
+    Node {
+        width: Val::Px(BUTTON_WIDTH),
+        height: Val::Px(BUTTON_HEIGHT),
+        margin: UiRect::all(Val::Px(BUTTON_MARGIN)),
+        justify_content: JustifyContent::Center,
+        align_items: AlignItems::Center,
+        ..default()
+    }
+}
+
+// ============================================================================
+// Text Style Builders
+// ============================================================================
+
+/// Title text style
+pub fn title_style() -> (TextFont, TextColor, Node) {
+    (
+        TextFont {
+            font_size: TITLE_FONT_SIZE,
+            ..default()
+        },
+        TextColor(MENU_TEXT),
+        Node {
+            margin: UiRect::bottom(Val::Px(TITLE_MARGIN_BOTTOM)),
+            ..default()
+        },
+    )
+}
+
+/// Button text style
+pub fn button_text_style() -> (TextFont, TextColor) {
+    (
+        TextFont {
+            font_size: BUTTON_FONT_SIZE,
+            ..default()
+        },
+        TextColor(MENU_TEXT),
+    )
+}

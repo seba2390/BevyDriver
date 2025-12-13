@@ -3,105 +3,49 @@ use bevy::prelude::*;
 
 use crate::constants::GameState;
 use crate::menu::components::{MenuButtonAction, OnMenuScreen};
-use crate::menu::constants::*;
+use crate::styles::colors::{BUTTON_HOVERED, BUTTON_NORMAL, BUTTON_PRESSED, MENU_BACKGROUND};
+use crate::styles::menu::{button_node, button_text_style, column_centered, fullscreen_centered, title_style};
+
+// ============================================================================
+// Menu Spawning
+// ============================================================================
 
 /// Spawns the main menu UI
 pub fn spawn_menu(mut commands: Commands) {
-    // Button node style
-    let button_node = Node {
-        width: Val::Px(BUTTON_WIDTH),
-        height: Val::Px(BUTTON_HEIGHT),
-        margin: UiRect::all(Val::Px(BUTTON_MARGIN)),
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::Center,
-        ..default()
-    };
-
-    let button_text_font = TextFont {
-        font_size: BUTTON_FONT_SIZE,
-        ..default()
-    };
-
-    // Root container for the menu (fills entire window with background)
     commands
-        .spawn((
-            Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                ..default()
-            },
-            BackgroundColor(MENU_BACKGROUND_COLOR),
-            OnMenuScreen,
-        ))
+        .spawn(root_container())
         .with_children(|parent| {
-            // Menu panel (centered content container)
-            parent
-                .spawn((
-                    Node {
-                        flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::Center,
-                        padding: UiRect::all(Val::Px(50.0)),
-                        ..default()
-                    },
-                ))
-                .with_children(|parent| {
-                    // Title
-                    parent.spawn((
-                        Text::new("Bevy Driver"),
-                        TextFont {
-                            font_size: TITLE_FONT_SIZE,
-                            ..default()
-                        },
-                        TextColor(TEXT_COLOR),
-                        Node {
-                            margin: UiRect::bottom(Val::Px(50.0)),
-                            ..default()
-                        },
-                    ));
-
-                    // New Game button
-                    parent
-                        .spawn((
-                            Button,
-                            button_node.clone(),
-                            BackgroundColor(NORMAL_BUTTON),
-                            MenuButtonAction::Play,
-                        ))
-                        .with_children(|parent| {
-                            parent.spawn((
-                                Text::new("New Game"),
-                                button_text_font.clone(),
-                                TextColor(TEXT_COLOR),
-                            ));
-                        });
-
-                    // Quit button
-                    parent
-                        .spawn((
-                            Button,
-                            button_node,
-                            BackgroundColor(NORMAL_BUTTON),
-                            MenuButtonAction::Quit,
-                        ))
-                        .with_children(|parent| {
-                            parent.spawn((
-                                Text::new("Quit"),
-                                button_text_font,
-                                TextColor(TEXT_COLOR),
-                            ));
-                        });
-                });
+            parent.spawn(menu_panel()).with_children(|parent| {
+                spawn_title(parent);
+                spawn_button(parent, "New Game", MenuButtonAction::Play);
+                spawn_button(parent, "Quit", MenuButtonAction::Quit);
+            });
         });
 }
 
-/// Despawns all menu entities when leaving the menu state
-pub fn cleanup_menu(mut commands: Commands, query: Query<Entity, With<OnMenuScreen>>) {
-    for entity in &query {
-        commands.entity(entity).despawn();
-    }
+fn root_container() -> impl Bundle {
+    (fullscreen_centered(), BackgroundColor(MENU_BACKGROUND), OnMenuScreen)
 }
+
+fn menu_panel() -> impl Bundle {
+    column_centered()
+}
+
+fn spawn_title(parent: &mut ChildSpawnerCommands) {
+    parent.spawn((Text::new("Bevy Driver"), title_style()));
+}
+
+fn spawn_button(parent: &mut ChildSpawnerCommands, label: &str, action: MenuButtonAction) {
+    parent
+        .spawn((Button, button_node(), BackgroundColor(BUTTON_NORMAL), action))
+        .with_children(|parent| {
+            parent.spawn((Text::new(label), button_text_style()));
+        });
+}
+
+// ============================================================================
+// Button Interaction
+// ============================================================================
 
 /// Handles button hover and press visual feedback
 pub fn button_system(
@@ -112,9 +56,9 @@ pub fn button_system(
 ) {
     for (interaction, mut background_color) in &mut interaction_query {
         *background_color = match *interaction {
-            Interaction::Pressed => PRESSED_BUTTON.into(),
-            Interaction::Hovered => HOVERED_BUTTON.into(),
-            Interaction::None => NORMAL_BUTTON.into(),
+            Interaction::Pressed => BUTTON_PRESSED.into(),
+            Interaction::Hovered => BUTTON_HOVERED.into(),
+            Interaction::None => BUTTON_NORMAL.into(),
         };
     }
 }
@@ -131,14 +75,21 @@ pub fn menu_action(
     for (interaction, menu_button_action) in &interaction_query {
         if *interaction == Interaction::Pressed {
             match menu_button_action {
-                MenuButtonAction::Play => {
-                    game_state.set(GameState::Playing);
-                }
-                MenuButtonAction::Quit => {
-                    app_exit_writer.write(AppExit::Success);
-                }
+                MenuButtonAction::Play => game_state.set(GameState::Playing),
+                MenuButtonAction::Quit => { app_exit_writer.write(AppExit::Success); }
             }
         }
+    }
+}
+
+// ============================================================================
+// Cleanup
+// ============================================================================
+
+/// Despawns all menu entities when leaving the menu state
+pub fn cleanup_menu(mut commands: Commands, query: Query<Entity, With<OnMenuScreen>>) {
+    for entity in &query {
+        commands.entity(entity).despawn();
     }
 }
 

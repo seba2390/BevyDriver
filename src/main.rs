@@ -5,6 +5,7 @@ mod constants;
 mod hud;
 mod menu;
 mod road;
+mod styles;
 
 use car::constants::CAR_HEIGHT;
 use car::systems::{handle_input, move_car, spawn_car};
@@ -16,7 +17,7 @@ use hud::systems::{
 use menu::systems::{button_system, cleanup_game, cleanup_menu, menu_action, spawn_menu};
 use road::components::Direction;
 use road::systems::{check_car_on_road, spawn_finish_line, spawn_start_line, spawn_track};
-use road::tracks::TRACK_3;
+use road::tracks::TRACK_1;
 
 fn main() {
     App::new()
@@ -67,7 +68,7 @@ fn setup_game(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    let track = &TRACK_3;
+    let track = &TRACK_1;
 
     spawn_car(&mut commands, track.starting_point);
     spawn_track(&mut commands, &mut meshes, &mut materials, track);

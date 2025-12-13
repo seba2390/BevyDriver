@@ -33,3 +33,25 @@ pub struct RaceState {
     /// Car's Y position last frame (for crossing detection)
     pub car_last_y: f32,
 }
+
+impl RaceState {
+
+    pub fn start_race(&mut self) {
+        self.status = RaceStatus::Racing;
+        self.stopwatch.reset();
+        self.stopwatch.unpause();
+    }
+
+    pub fn finish_race(&mut self) {
+        self.status = RaceStatus::Finished;
+        self.stopwatch.pause();
+        self.final_time = Some(self.stopwatch.elapsed_secs());
+    }
+
+    /// Stores the car's Y position from this frame for next frame's crossing detection.
+    /// Crossing = car moved from one side of a line to the other between frames.
+    pub fn set_previous_car_y(&mut self, y: f32) {
+        self.car_last_y = y;
+    }
+
+}

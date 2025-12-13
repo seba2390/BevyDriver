@@ -1,7 +1,24 @@
 use crate::road::components::{RoadSegmentType, Track};
 use bevy::prelude::*;
 
-const TRACK_1_LAYOUT: [RoadSegmentType; 22] = [
+const TRACK_1_LAYOUT: [RoadSegmentType; 46-4] = [
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::CornerRight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
     RoadSegmentType::Straight,
     RoadSegmentType::Straight,
     RoadSegmentType::Straight,
@@ -16,7 +33,10 @@ const TRACK_1_LAYOUT: [RoadSegmentType; 22] = [
     RoadSegmentType::Straight,
     RoadSegmentType::Straight,
     RoadSegmentType::Straight,
-    RoadSegmentType::CornerRight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
+    RoadSegmentType::Straight,
     RoadSegmentType::Straight,
     RoadSegmentType::Straight,
     RoadSegmentType::Straight,
@@ -26,32 +46,8 @@ const TRACK_1_LAYOUT: [RoadSegmentType; 22] = [
     RoadSegmentType::CornerRight,
 ];
 
-const TRACK_2_LAYOUT: [RoadSegmentType; 22] = [
-    RoadSegmentType::Straight,
-    RoadSegmentType::Straight,
-    RoadSegmentType::Straight,
-    RoadSegmentType::CornerLeft,
-    RoadSegmentType::Straight,
-    RoadSegmentType::Straight,
-    RoadSegmentType::Straight,
-    RoadSegmentType::Straight,
-    RoadSegmentType::Straight,
-    RoadSegmentType::Straight,
-    RoadSegmentType::CornerLeft,
-    RoadSegmentType::Straight,
-    RoadSegmentType::Straight,
-    RoadSegmentType::Straight,
-    RoadSegmentType::CornerLeft,
-    RoadSegmentType::Straight,
-    RoadSegmentType::Straight,
-    RoadSegmentType::Straight,
-    RoadSegmentType::Straight,
-    RoadSegmentType::Straight,
-    RoadSegmentType::Straight,
-    RoadSegmentType::CornerLeft,
-];
 
-const TRACK_3_LAYOUT: [RoadSegmentType; 175 - 54] = [
+const TRACK_2_LAYOUT: [RoadSegmentType; 171 - 50] = [
     RoadSegmentType::Straight,
     RoadSegmentType::Straight,
     RoadSegmentType::Straight,
@@ -176,16 +172,11 @@ const TRACK_3_LAYOUT: [RoadSegmentType; 175 - 54] = [
 ];
 
 pub const TRACK_1: Track = Track {
-    layout: &TRACK_1_LAYOUT,
-    starting_point: Vec2::new(0.0, 0.0),
-};
-
-pub const TRACK_2: Track = Track {
     layout: &TRACK_2_LAYOUT,
     starting_point: Vec2::new(-100.0, 0.0),
 };
 
-pub const TRACK_3: Track = Track {
-    layout: &TRACK_3_LAYOUT,
+pub const TRACK_2: Track = Track {
+    layout: &TRACK_1_LAYOUT,
     starting_point: Vec2::new(-100.0, 0.0),
 };
