@@ -11,7 +11,7 @@ use crate::road::components::{
 use crate::road::constants::*;
 use crate::road::helpers::{
     get_direction_vector, get_exit_direction, get_position_offset, get_rotation,
-    is_point_in_corner_left, is_point_in_corner_right, is_point_in_straight, validate_track_layout,
+    is_point_in_corner_left, is_point_in_corner_right, is_point_in_straight,
 };
 
 /// Spawns the start line at the given position

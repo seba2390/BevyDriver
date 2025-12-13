@@ -83,9 +83,7 @@ pub fn level_complete_action(
                     game_state.set(GameState::Playing);
                 }
                 LevelCompleteButtonAction::NextLevel => {
-                    if current_level.0 >= 3 {
-                        panic!("No more levels available! You've completed all 3 levels.");
-                    }
+                    // Levels 1-3 are hardcoded, levels 4+ are randomly generated
                     current_level.0 += 1;
                     game_state.set(GameState::Playing);
                 }

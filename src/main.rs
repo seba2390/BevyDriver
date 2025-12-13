@@ -21,9 +21,10 @@ use level_complete::systems::{
     spawn_level_complete_menu,
 };
 use start_menu::systems::{button_system, cleanup_menu, menu_action, spawn_menu};
-use road::components::Direction;
+use road::components::{Direction, Track};
 use road::systems::{check_car_on_road, spawn_finish_line, spawn_start_line, spawn_track};
 use road::tracks::get_track;
+use road::track_generator::{generate_random_track, TrackGeneratorConfig};
 
 use crate::hud::systems::spawn_level_text_ui;
 
@@ -88,10 +89,37 @@ fn setup_game(
     mut materials: ResMut<Assets<ColorMaterial>>,
     current_level: Res<CurrentLevel>,
 ) {
-    let track = get_track(current_level.0);
+    // Use hardcoded tracks for levels 1-3, random tracks for level 4+
+    let track: Track = if current_level.0 <= 3 {
+        let t = get_track(current_level.0);
+        Track {
+            layout: t.layout,
+            starting_point: t.starting_point,
+        }
+    } else {
+        // Generate random track with seed based on level number
+        let config = TrackGeneratorConfig {
+            min_segments: 20,
+            max_segments: 150,
+            target_difficulty: 0.5,
+            seed: current_level.0 as u64,
+        };
+        let generated = generate_random_track(&config)
+            .expect("Failed to generate random track");
+
+        // Log the track metrics
+        println!("Level {} - Generated track metrics: {:?}", current_level.0, generated.metrics);
+
+        // Convert Vec to &'static slice (leaks memory, but acceptable for game sessions)
+        let static_layout: &'static [_] = Box::leak(generated.layout.into_boxed_slice());
+        Track {
+            layout: static_layout,
+            starting_point: generated.starting_point,
+        }
+    };
 
     spawn_car(&mut commands, track.starting_point);
-    spawn_track(&mut commands, &mut meshes, &mut materials, track);
+    spawn_track(&mut commands, &mut meshes, &mut materials, &track);
 
     // Spawn start line at the track's starting point (car crosses going up)
     spawn_start_line(&mut commands, track.starting_point, Direction::Up);

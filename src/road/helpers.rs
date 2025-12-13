@@ -1,7 +1,12 @@
 use bevy::prelude::*;
+use rand::Rng;
+use rand::SeedableRng;
+use rand_chacha::ChaCha8Rng;
 use std::collections::HashSet;
 use crate::road::components::{Direction, RoadSegmentType};
 use crate::road::constants::{ROAD_SEGMENT_LENGTH, ROAD_WIDTH};
+use crate::constants::{WINDOW_WIDTH, WINDOW_HEIGHT};
+
 
 /// Check if a point (in local space) is inside a straight road segment.
 /// The straight road is a rectangle centered at (0,0) with dimensions ROAD_WIDTH x ROAD_SEGMENT_LENGTH.
@@ -103,53 +108,4 @@ pub fn get_direction_vector(direction: Direction) -> Vec2 {
         Direction::Left => Vec2::NEG_X,
         Direction::Right => Vec2::X,
     }
-}
-
-// Validate that a track layout forms a closed loop and has no crossings
-pub fn validate_track_layout(layout: &[RoadSegmentType]) {
-    if layout.is_empty() {
-        panic!("Invalid track layout: track is empty");
-    }
-
-    let mut current_direction = Direction::Up;
-    let mut current_position = IVec2::ZERO;
-    let mut visited = HashSet::new();
-
-    visited.insert(current_position);
-
-    for &segment_type in layout.iter() {
-        // Move to next position first
-        match current_direction {
-            Direction::Up => current_position.y += 1,
-            Direction::Down => current_position.y -= 1,
-            Direction::Left => current_position.x -= 1,
-            Direction::Right => current_position.x += 1,
-        };
-
-        // Check if we've returned to start (only valid on last iteration)
-        if current_position == IVec2::ZERO {
-            // Check if the last segment connects smoothly to the start (Direction::Up)
-            let exit_direction = get_exit_direction(current_direction, segment_type);
-            if !matches!(exit_direction, Direction::Up) {
-                panic!(
-                    "Invalid track layout: track does not close smoothly. End direction {:?} -> Start direction Up",
-                    exit_direction
-                );
-            }
-            return;
-        }
-
-        if visited.contains(&current_position) {
-            panic!(
-                "Invalid track layout: track crosses itself at position ({}, {})",
-                current_position.x, current_position.y
-            );
-        }
-        visited.insert(current_position);
-
-        // Update direction for next segment
-        current_direction = get_exit_direction(current_direction, segment_type);
-    }
-
-    panic!("Invalid track layout: track does not form a closed loop");
 }
