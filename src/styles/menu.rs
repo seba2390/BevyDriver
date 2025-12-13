@@ -6,7 +6,8 @@ use crate::styles::colors::*;
 // Layout Constants
 // ============================================================================
 
-pub const BUTTON_WIDTH: f32 = 250.0;
+pub const STANDARD_BUTTON_WIDTH: f32 = 250.0;
+pub const LARGE_BUTTON_WIDTH: f32 = 300.0;
 pub const BUTTON_HEIGHT: f32 = 65.0;
 pub const BUTTON_MARGIN: f32 = 20.0;
 pub const TITLE_FONT_SIZE: f32 = 60.0;
@@ -40,9 +41,9 @@ pub fn column_centered() -> Node {
 }
 
 /// Standard menu button layout
-pub fn button_node() -> Node {
+pub fn button_node(button_width: f32) -> Node {
     Node {
-        width: Val::Px(BUTTON_WIDTH),
+        width: Val::Px(button_width),
         height: Val::Px(BUTTON_HEIGHT),
         margin: UiRect::all(Val::Px(BUTTON_MARGIN)),
         justify_content: JustifyContent::Center,
@@ -50,6 +51,7 @@ pub fn button_node() -> Node {
         ..default()
     }
 }
+
 
 // ============================================================================
 // Text Style Builders
@@ -62,7 +64,7 @@ pub fn title_style() -> (TextFont, TextColor, Node) {
             font_size: TITLE_FONT_SIZE,
             ..default()
         },
-        TextColor(MENU_TEXT),
+        TextColor(MENU_TEXT_COLOR),
         Node {
             margin: UiRect::bottom(Val::Px(TITLE_MARGIN_BOTTOM)),
             ..default()
@@ -77,6 +79,6 @@ pub fn button_text_style() -> (TextFont, TextColor) {
             font_size: BUTTON_FONT_SIZE,
             ..default()
         },
-        TextColor(MENU_TEXT),
+        TextColor(MENU_TEXT_COLOR),
     )
 }

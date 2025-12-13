@@ -2,9 +2,9 @@ use bevy::app::AppExit;
 use bevy::prelude::*;
 
 use crate::constants::GameState;
-use crate::menu::components::{MenuButtonAction, OnMenuScreen};
-use crate::styles::colors::{BUTTON_HOVERED, BUTTON_NORMAL, BUTTON_PRESSED, MENU_BACKGROUND};
-use crate::styles::menu::{button_node, button_text_style, column_centered, fullscreen_centered, title_style};
+use crate::start_menu::components::{MenuButtonAction, OnMenuScreen};
+use crate::styles::colors::{BUTTON_HOVERED_COLOR, BUTTON_NORMAL_COLOR, BUTTON_PRESSED_COLOR, MENU_BACKGROUND_COLOR};
+use crate::styles::menu::{STANDARD_BUTTON_WIDTH, button_node, button_text_style, column_centered, fullscreen_centered, title_style};
 
 // ============================================================================
 // Menu Spawning
@@ -24,7 +24,7 @@ pub fn spawn_menu(mut commands: Commands) {
 }
 
 fn root_container() -> impl Bundle {
-    (fullscreen_centered(), BackgroundColor(MENU_BACKGROUND), OnMenuScreen)
+    (fullscreen_centered(), BackgroundColor(MENU_BACKGROUND_COLOR), OnMenuScreen)
 }
 
 fn menu_panel() -> impl Bundle {
@@ -37,7 +37,7 @@ fn spawn_title(parent: &mut ChildSpawnerCommands) {
 
 fn spawn_button(parent: &mut ChildSpawnerCommands, label: &str, action: MenuButtonAction) {
     parent
-        .spawn((Button, button_node(), BackgroundColor(BUTTON_NORMAL), action))
+        .spawn((Button, button_node(STANDARD_BUTTON_WIDTH), BackgroundColor(BUTTON_NORMAL_COLOR), action))
         .with_children(|parent| {
             parent.spawn((Text::new(label), button_text_style()));
         });
@@ -56,9 +56,9 @@ pub fn button_system(
 ) {
     for (interaction, mut background_color) in &mut interaction_query {
         *background_color = match *interaction {
-            Interaction::Pressed => BUTTON_PRESSED.into(),
-            Interaction::Hovered => BUTTON_HOVERED.into(),
-            Interaction::None => BUTTON_NORMAL.into(),
+            Interaction::Pressed => BUTTON_PRESSED_COLOR.into(),
+            Interaction::Hovered => BUTTON_HOVERED_COLOR.into(),
+            Interaction::None => BUTTON_NORMAL_COLOR.into(),
         };
     }
 }
@@ -96,7 +96,7 @@ pub fn cleanup_menu(mut commands: Commands, query: Query<Entity, With<OnMenuScre
 /// Despawns all gameplay entities when leaving the playing state
 pub fn cleanup_game(
     mut commands: Commands,
-    query: Query<Entity, With<crate::menu::components::GameEntity>>,
+    query: Query<Entity, With<crate::start_menu::components::GameEntity>>,
 ) {
     for entity in &query {
         commands.entity(entity).despawn();

@@ -3,6 +3,10 @@ use bevy::time::Stopwatch;
 
 /// Marker component for the "Off the road!" warning text
 #[derive(Component)]
+pub struct LevelText;
+
+/// Marker component for the "Off the road!" warning text
+#[derive(Component)]
 pub struct OffRoadText;
 
 /// Marker component for the lap timer display text

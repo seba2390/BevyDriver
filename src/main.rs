@@ -3,7 +3,8 @@ use bevy::prelude::*;
 mod car;
 mod constants;
 mod hud;
-mod menu;
+mod level_complete;
+mod start_menu;
 mod road;
 mod styles;
 
@@ -11,13 +12,20 @@ use car::constants::CAR_HEIGHT;
 use car::systems::{handle_input, move_car, spawn_car};
 use constants::{GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
 use hud::systems::{
-    check_finish_line_crossing, check_start_line_crossing, handle_off_road_logic, init_race_state,
-    spawn_off_road_ui, spawn_timer_ui, tick_race_timer, update_timer_display,
+    check_finish_line_crossing, check_race_finished, check_start_line_crossing,
+    handle_off_road_logic, init_race_state, spawn_off_road_ui, spawn_timer_ui,
+    tick_race_timer, update_timer_display,
 };
-use menu::systems::{button_system, cleanup_game, cleanup_menu, menu_action, spawn_menu};
+use level_complete::systems::{
+    cleanup_level_complete_menu, level_complete_action, level_complete_button_system,
+    spawn_level_complete_menu,
+};
+use start_menu::systems::{button_system, cleanup_menu, menu_action, spawn_menu};
 use road::components::Direction;
 use road::systems::{check_car_on_road, spawn_finish_line, spawn_start_line, spawn_track};
-use road::tracks::TRACK_1;
+use road::tracks::{TRACK_1, TRACK_2, TRACK_3};
+
+use crate::hud::systems::spawn_level_text_ui;
 
 fn main() {
     App::new()
@@ -34,15 +42,15 @@ fn main() {
         // Spawn camera once on startup (persists across states)
         .add_systems(Startup, spawn_camera)
         // Menu state systems
-        .add_systems(OnEnter(GameState::Menu), spawn_menu)
-        .add_systems(OnExit(GameState::Menu), cleanup_menu)
+        .add_systems(OnEnter(GameState::StartMenu), spawn_menu)
+        .add_systems(OnExit(GameState::StartMenu), cleanup_menu)
         .add_systems(
             Update,
-            (button_system, menu_action).run_if(in_state(GameState::Menu)),
+            (button_system, menu_action).run_if(in_state(GameState::StartMenu)),
         )
         // Playing state systems
         .add_systems(OnEnter(GameState::Playing), setup_game)
-        .add_systems(OnExit(GameState::Playing), cleanup_game)
+        // Note: Game cleanup happens in cleanup_level_complete_menu to keep track visible during overlay
         .add_systems(
             Update,
             (
@@ -53,8 +61,17 @@ fn main() {
                 check_finish_line_crossing,
                 tick_race_timer,
                 update_timer_display,
+                check_race_finished,
             )
                 .run_if(in_state(GameState::Playing)),
+        )
+        // Level Complete state systems
+        .add_systems(OnEnter(GameState::LevelComplete), spawn_level_complete_menu)
+        .add_systems(OnExit(GameState::LevelComplete), cleanup_level_complete_menu)
+        .add_systems(
+            Update,
+            (level_complete_button_system, level_complete_action)
+                .run_if(in_state(GameState::LevelComplete)),
         )
         .run();
 }
@@ -86,5 +103,6 @@ fn setup_game(
 
     spawn_off_road_ui(&mut commands);
     spawn_timer_ui(&mut commands);
+    spawn_level_text_ui(&mut commands);
     init_race_state(commands, track.starting_point.y);
 }

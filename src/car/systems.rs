@@ -1,7 +1,7 @@
 use crate::car::components::{Car, Velocity};
 use crate::car::constants::*;
 use crate::constants::{BOTTOM_BOUNDARY, LEFT_BOUNDARY, RIGHT_BOUNDARY, TOP_BOUNDARY};
-use crate::menu::components::GameEntity;
+use crate::start_menu::components::GameEntity;
 use bevy::prelude::*;
 
 // ============================================================================

@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use crate::car::components::Car;
 use crate::car::constants::CAR_HEIGHT;
 use crate::car::helpers::get_car_corners;
-use crate::menu::components::GameEntity;
+use crate::start_menu::components::GameEntity;
 use crate::road::components::{
     Direction, FinishLine, RoadSegment, RoadSegmentType, StartLine, Track,
 };

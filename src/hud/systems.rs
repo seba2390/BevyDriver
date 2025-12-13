@@ -2,11 +2,22 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
 use crate::car::components::Car;
-use crate::hud::components::{OffRoadText, RaceState, RaceStatus, TimerText};
+use crate::constants::GameState;
+use crate::hud::components::{OffRoadText, LevelText, RaceState, RaceStatus, TimerText};
 use crate::hud::helpers::{format_elapsed_time, has_crossed_line, is_within_line_x_bounds};
-use crate::menu::components::GameEntity;
+use crate::start_menu::components::GameEntity;
 use crate::road::components::{Direction, FinishLine, StartLine};
-use crate::styles::hud::{off_road_warning_style, timer_color, timer_style};
+use crate::styles::hud::{off_road_warning_style, level_text_style, timer_color, timer_style};
+
+/// Spawns the off the road level text UI element
+pub fn spawn_level_text_ui(commands: &mut Commands) {
+    commands.spawn((
+        Text::new("Level 1"),
+        level_text_style(),
+        LevelText,
+        GameEntity,
+    ));
+}
 
 /// Spawns the off-road warning UI element
 pub fn spawn_off_road_ui(commands: &mut Commands) {
@@ -132,5 +143,15 @@ pub fn handle_off_road_logic(
         } else {
             *visibility = Visibility::Visible;
         }
+    }
+}
+
+/// System to detect when race finishes and transition to LevelComplete state
+pub fn check_race_finished(
+    race_state: Res<RaceState>,
+    mut game_state: ResMut<NextState<GameState>>,
+) {
+    if race_state.status == RaceStatus::Finished {
+        game_state.set(GameState::LevelComplete);
     }
 }
