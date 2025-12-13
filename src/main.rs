@@ -22,7 +22,7 @@ use level_complete::systems::{
 };
 use start_menu::systems::{button_system, cleanup_menu, menu_action, spawn_menu};
 use road::components::{Direction, Track};
-use road::systems::{check_car_on_road, spawn_finish_line, spawn_start_line, spawn_track};
+use road::systems::{check_car_on_road, spawn_finish_line, spawn_start_line, spawn_track, update_segment_visited_status};
 use road::tracks::get_track;
 use road::track_generator::{generate_random_track, TrackGeneratorConfig};
 
@@ -60,8 +60,10 @@ fn main() {
                 handle_input,
                 move_car,
                 check_car_on_road.pipe(handle_off_road_logic),
+                // Chain these two systems to ensure Visited markers are applied
+                // before checking if all segments are visited at the finish line
+                (update_segment_visited_status, check_finish_line_crossing).chain(),
                 check_start_line_crossing,
-                check_finish_line_crossing,
                 tick_race_timer,
                 update_timer_display,
                 update_multiplier_display,

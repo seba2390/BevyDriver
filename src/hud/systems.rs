@@ -6,7 +6,7 @@ use crate::constants::{CurrentLevel, GameState};
 use crate::hud::components::{MultiplierText, OffRoadText, LevelText, RaceState, RaceStatus, TimerText};
 use crate::hud::helpers::{format_elapsed_time, has_crossed_line, is_within_line_x_bounds};
 use crate::start_menu::components::GameEntity;
-use crate::road::components::{Direction, FinishLine, StartLine};
+use crate::road::components::{Direction, FinishLine, RoadSegment, StartLine, Visited};
 use crate::styles::hud::{multiplier_style, off_road_warning_style, level_text_style, timer_color, timer_style};
 
 /// Spawns the off the road level text UI element
@@ -104,6 +104,7 @@ pub fn check_start_line_crossing(
 pub fn check_finish_line_crossing(
     car_query: Single<&Transform, With<Car>>,
     finish_line_query: Single<(&Transform, &FinishLine)>,
+    unvisited_query: Query<(), (With<RoadSegment>, Without<Visited>)>,
     mut race_state: ResMut<RaceState>,
 ) {
     // Only check for finish crossing while actively racing
@@ -115,9 +116,13 @@ pub fn check_finish_line_crossing(
     let (finish_transform, finish_line) = *finish_line_query;
     let finish_pos = finish_transform.translation.truncate();
 
-    // Check if car crossed the finish line
+    // Check if car crossed the finish line AND all segments have been visited
     if has_crossed_line_at(car_pos, race_state.car_last_y, finish_pos, finish_line.direction) {
-        race_state.finish_race();
+        // All segments visited = no unvisited segments remain (O(1) check)
+        let all_visited = unvisited_query.is_empty();
+        if all_visited {
+            race_state.finish_race();
+        }
     }
 
     // Update last Y position for next frame's crossing detection

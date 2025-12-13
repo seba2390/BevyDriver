@@ -29,6 +29,10 @@ pub struct RoadSegment {
     pub direction: Direction,
 }
 
+/// Marker component indicating a road segment has been visited by the car
+#[derive(Component)]
+pub struct Visited;
+
 /// Component for the start line entity
 /// The direction indicates which way the car must cross to trigger the start
 #[derive(Component)]

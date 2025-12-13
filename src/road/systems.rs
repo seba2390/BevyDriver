@@ -6,7 +6,7 @@ use crate::car::constants::CAR_HEIGHT;
 use crate::car::helpers::get_car_corners;
 use crate::start_menu::components::GameEntity;
 use crate::road::components::{
-    Direction, FinishLine, RoadSegment, RoadSegmentType, StartLine, Track,
+    Direction, FinishLine, RoadSegment, RoadSegmentType, StartLine, Track, Visited,
 };
 use crate::road::constants::*;
 use crate::road::helpers::{
@@ -106,7 +106,7 @@ fn spawn_straight_road(
     let center = current_endpoint + offset / 2.0;
 
     let road_sprite = Sprite {
-        color: Color::srgb(0.6, 0.6, 0.6),
+        color: UNVISITED_ROAD_SEGMENT_COLOR,
         custom_size: Some(Vec2::new(ROAD_WIDTH, ROAD_SEGMENT_LENGTH)),
         ..default()
     };
@@ -159,7 +159,7 @@ fn spawn_corner_road(
 
     commands.spawn((
         Mesh2d(meshes.add(sector)),
-        MeshMaterial2d(materials.add(ColorMaterial::from(Color::srgb(0.3, 0.3, 0.3)))),
+        MeshMaterial2d(materials.add(ColorMaterial::from(UNVISITED_ROAD_SEGMENT_COLOR))),
         Transform::from_xyz(pivot.x, pivot.y, CORNER_ROAD_Z)
             .with_rotation(Quat::from_rotation_z(rotation_angle)),
         RoadSegment {
@@ -232,4 +232,67 @@ pub fn check_car_on_road(
 
     // All corners are on the road
     return true;
+}
+
+/// System to mark road segments as visited when the car touches them and change their color.
+/// Uses Without<Visited> filter to only query unvisited segments (O(1) archetype filtering).
+/// A segment is marked visited as soon as any part of the car (any corner) touches it.
+pub fn update_segment_visited_status(
+    mut commands: Commands,
+    car_query: Query<&Transform, With<Car>>,
+    mut road_query: Query<
+        (
+            Entity,
+            &Transform,
+            &RoadSegment,
+            Option<&mut Sprite>,
+            Option<&MeshMaterial2d<ColorMaterial>>,
+        ),
+        Without<Visited>,
+    >,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    let car_transform = car_query.single().unwrap();
+    let car_corners = get_car_corners(car_transform);
+
+    for (entity, road_transform, road_segment, sprite_opt, material_opt) in road_query.iter_mut() {
+        // Check if ANY corner of the car is on this segment
+        let mut car_touches_segment = false;
+
+        for corner in car_corners.iter() {
+            // Transform corner to road's local space
+            let local_corner = road_transform
+                .compute_affine()
+                .inverse()
+                .transform_point3(*corner)
+                .xy();
+
+            let is_on_segment = match road_segment.segment_type {
+                RoadSegmentType::Straight => is_point_in_straight(local_corner),
+                RoadSegmentType::CornerRight => is_point_in_corner_right(local_corner),
+                RoadSegmentType::CornerLeft => is_point_in_corner_left(local_corner),
+            };
+
+            if is_on_segment {
+                car_touches_segment = true;
+                break;
+            }
+        }
+
+        if car_touches_segment {
+            // Insert Visited marker component
+            commands.entity(entity).insert(Visited);
+
+            // Update color based on segment type:
+            // - Straight segments use Sprite component
+            // - Corner segments use MeshMaterial2d<ColorMaterial>
+            if let Some(mut sprite) = sprite_opt {
+                sprite.color = VISITED_ROAD_SEGMENT_COLOR;
+            } else if let Some(material_handle) = material_opt {
+                if let Some(material) = materials.get_mut(&material_handle.0) {
+                    material.color = VISITED_ROAD_SEGMENT_COLOR;
+                }
+            }
+        }
+    }
 }
