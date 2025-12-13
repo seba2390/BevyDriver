@@ -3,11 +3,11 @@ use bevy::time::Stopwatch;
 
 use crate::car::components::Car;
 use crate::constants::{CurrentLevel, GameState};
-use crate::hud::components::{OffRoadText, LevelText, RaceState, RaceStatus, TimerText};
+use crate::hud::components::{MultiplierText, OffRoadText, LevelText, RaceState, RaceStatus, TimerText};
 use crate::hud::helpers::{format_elapsed_time, has_crossed_line, is_within_line_x_bounds};
 use crate::start_menu::components::GameEntity;
 use crate::road::components::{Direction, FinishLine, StartLine};
-use crate::styles::hud::{off_road_warning_style, level_text_style, timer_color, timer_style};
+use crate::styles::hud::{multiplier_style, off_road_warning_style, level_text_style, timer_color, timer_style};
 
 /// Spawns the off the road level text UI element
 pub fn spawn_level_text_ui(commands: &mut Commands, current_level: &CurrentLevel) {
@@ -40,6 +40,19 @@ pub fn spawn_timer_ui(commands: &mut Commands) {
     ));
 }
 
+/// Spawns the multiplier indicator UI element below the timer
+pub fn spawn_multiplier_ui(commands: &mut Commands) {
+    use crate::hud::constants::OFF_ROAD_TIME_MULTIPLIER;
+
+    commands.spawn((
+        Text::new(format!("(x{})", OFF_ROAD_TIME_MULTIPLIER as i32)),
+        multiplier_style(),
+        Visibility::Hidden,
+        MultiplierText,
+        GameEntity,
+    ));
+}
+
 /// Initialize the race state resource
 pub fn init_race_state(mut commands: Commands, car_start_y: f32) {
     commands.insert_resource(RaceState {
@@ -47,6 +60,7 @@ pub fn init_race_state(mut commands: Commands, car_start_y: f32) {
         status: RaceStatus::WaitingToStart,
         final_time: None,
         car_last_y: car_start_y,
+        is_on_road: true,
     });
 }
 
@@ -112,8 +126,11 @@ pub fn check_finish_line_crossing(
 
 /// System to tick the race timer
 pub fn tick_race_timer(mut race_state: ResMut<RaceState>, time: Res<Time>) {
+    use crate::hud::constants::OFF_ROAD_TIME_MULTIPLIER;
+
     if race_state.status == RaceStatus::Racing {
-        race_state.stopwatch.tick(time.delta());
+        let multiplier = if race_state.is_on_road { 1.0 } else { OFF_ROAD_TIME_MULTIPLIER };
+        race_state.stopwatch.tick(time.delta().mul_f32(multiplier));
     }
 }
 
@@ -135,13 +152,32 @@ pub fn update_timer_display(
 /// Handles showing/hiding the off-road warning based on car position
 pub fn handle_off_road_logic(
     In(is_on_road): In<bool>,
+    mut race_state: ResMut<RaceState>,
     mut query: Query<&mut Visibility, With<OffRoadText>>,
 ) {
+    // Update race state with current road status
+    race_state.is_on_road = is_on_road;
+
     if let Ok(mut visibility) = query.single_mut() {
         if is_on_road {
             *visibility = Visibility::Hidden;
         } else {
             *visibility = Visibility::Visible;
+        }
+    }
+}
+
+/// System to update the multiplier display visibility based on road status
+pub fn update_multiplier_display(
+    race_state: Res<RaceState>,
+    mut query: Query<&mut Visibility, With<MultiplierText>>,
+) {
+    if let Ok(mut visibility) = query.single_mut() {
+        // Only show multiplier when racing and off the road
+        if race_state.status == RaceStatus::Racing && !race_state.is_on_road {
+            *visibility = Visibility::Visible;
+        } else {
+            *visibility = Visibility::Hidden;
         }
     }
 }

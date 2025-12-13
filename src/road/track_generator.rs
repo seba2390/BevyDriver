@@ -17,25 +17,6 @@ pub struct GeneratedTrack {
     pub layout: Vec<RoadSegmentType>,
     /// The starting position of the track (world coordinates)
     pub starting_point: Vec2,
-    /// Difficulty metrics
-    pub metrics: TrackMetrics,
-}
-
-/// Metrics describing track difficulty
-#[derive(Debug, Clone)]
-pub struct TrackMetrics {
-    /// Total number of segments
-    pub segment_count: usize,
-    /// Number of corners (turns)
-    pub corner_count: usize,
-    /// Number of left turns
-    pub left_turns: usize,
-    /// Number of right turns
-    pub right_turns: usize,
-    /// Turn density: corners / total segments (0.0 to 1.0)
-    pub turn_density: f32,
-    /// Difficulty score (0.0 = easy, 1.0 = hard)
-    pub difficulty: f32,
 }
 
 /// Configuration for random track generation
@@ -402,7 +383,7 @@ fn choose_segment<R: Rng>(
     valid_moves[rng.random_range(0..valid_moves.len())]
 }
 
-/// Finalize the track by computing starting point and metrics
+/// Finalize the track by computing starting point
 fn finalize_track(layout: Vec<RoadSegmentType>) -> GeneratedTrack {
     // Calculate the bounding box of the track path
     let mut current_pos = IVec2::ZERO;
@@ -432,34 +413,8 @@ fn finalize_track(layout: Vec<RoadSegmentType>) -> GeneratedTrack {
         -center_y * ROAD_SEGMENT_LENGTH,
     );
 
-    // Calculate metrics
-    let segment_count = layout.len();
-    let left_turns = layout
-        .iter()
-        .filter(|&&s| s == RoadSegmentType::CornerLeft)
-        .count();
-    let right_turns = layout
-        .iter()
-        .filter(|&&s| s == RoadSegmentType::CornerRight)
-        .count();
-    let corner_count = left_turns + right_turns;
-    let turn_density = corner_count as f32 / segment_count as f32;
-
-    // Difficulty based on turn density and track length
-    // Short tracks with many turns are harder
-    let length_factor = 1.0 - (segment_count as f32 / 60.0).min(1.0) * 0.3;
-    let difficulty = (turn_density * length_factor).clamp(0.0, 1.0);
-
     GeneratedTrack {
         layout,
         starting_point,
-        metrics: TrackMetrics {
-            segment_count,
-            corner_count,
-            left_turns,
-            right_turns,
-            turn_density,
-            difficulty,
-        },
     }
 }

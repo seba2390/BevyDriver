@@ -13,6 +13,10 @@ pub struct OffRoadText;
 #[derive(Component)]
 pub struct TimerText;
 
+/// Marker component for the time multiplier indicator text
+#[derive(Component)]
+pub struct MultiplierText;
+
 /// The current status of the race
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub enum RaceStatus {
@@ -36,6 +40,8 @@ pub struct RaceState {
     pub final_time: Option<f32>,
     /// Car's Y position last frame (for crossing detection)
     pub car_last_y: f32,
+    /// Whether the car is currently on the road (affects timer speed)
+    pub is_on_road: bool,
 }
 
 impl RaceState {

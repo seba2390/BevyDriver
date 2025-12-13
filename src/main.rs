@@ -13,8 +13,8 @@ use car::systems::{handle_input, move_car, spawn_car};
 use constants::{CurrentLevel, GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
 use hud::systems::{
     check_finish_line_crossing, check_race_finished, check_start_line_crossing,
-    handle_off_road_logic, init_race_state, spawn_off_road_ui, spawn_timer_ui,
-    tick_race_timer, update_timer_display,
+    handle_off_road_logic, init_race_state, spawn_multiplier_ui, spawn_off_road_ui, spawn_timer_ui,
+    tick_race_timer, update_multiplier_display, update_timer_display,
 };
 use level_complete::systems::{
     cleanup_level_complete_menu, level_complete_action, level_complete_button_system,
@@ -64,6 +64,7 @@ fn main() {
                 check_finish_line_crossing,
                 tick_race_timer,
                 update_timer_display,
+                update_multiplier_display,
                 check_race_finished,
             )
                 .run_if(in_state(GameState::Playing)),
@@ -107,9 +108,6 @@ fn setup_game(
         let generated = generate_random_track(&config)
             .expect("Failed to generate random track");
 
-        // Log the track metrics
-        println!("Level {} - Generated track metrics: {:?}", current_level.0, generated.metrics);
-
         // Convert Vec to &'static slice (leaks memory, but acceptable for game sessions)
         let static_layout: &'static [_] = Box::leak(generated.layout.into_boxed_slice());
         Track {
@@ -134,6 +132,7 @@ fn setup_game(
 
     spawn_off_road_ui(&mut commands);
     spawn_timer_ui(&mut commands);
+    spawn_multiplier_ui(&mut commands);
     spawn_level_text_ui(&mut commands, &current_level);
     init_race_state(commands, track.starting_point.y);
 }

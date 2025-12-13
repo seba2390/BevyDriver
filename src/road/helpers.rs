@@ -1,11 +1,6 @@
 use bevy::prelude::*;
-use rand::Rng;
-use rand::SeedableRng;
-use rand_chacha::ChaCha8Rng;
-use std::collections::HashSet;
 use crate::road::components::{Direction, RoadSegmentType};
 use crate::road::constants::{ROAD_SEGMENT_LENGTH, ROAD_WIDTH};
-use crate::constants::{WINDOW_WIDTH, WINDOW_HEIGHT};
 
 
 /// Check if a point (in local space) is inside a straight road segment.

@@ -21,10 +21,11 @@ pub fn spawn_start_line(commands: &mut Commands, position: Vec2, direction: Dire
         custom_size: Some(Vec2::new(STARTING_LINE_WIDTH, STARTING_LINE_HEIGHT)),
         ..default()
     };
-    // Place the starting line slightly ahead of the starting point
+    // Place the starting line CAR_HEIGHT ahead of the starting point
+    // This mirrors the finish line which is CAR_HEIGHT behind the starting point
     let start_line_transform = Transform::from_xyz(
         position.x,
-        position.y + CAR_HEIGHT * START_LINE_Y_OFFSET_MULTIPLIER,
+        position.y + CAR_HEIGHT,
         STARTING_LINE_Z,
     );
 

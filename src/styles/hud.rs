@@ -70,6 +70,24 @@ pub fn timer_style() -> (TextFont, TextColor, TextLayout, Node) {
     )
 }
 
+/// Multiplier indicator text style (below timer, top-right corner)
+pub fn multiplier_style() -> (TextFont, TextColor, TextLayout, Node) {
+    (
+        TextFont {
+            font_size: HUD_FONT_SIZE * 0.7,
+            ..default()
+        },
+        TextColor(WARNING_TEXT_COLOR),
+        TextLayout::new_with_justify(Justify::Right),
+        Node {
+            position_type: PositionType::Absolute,
+            top: Val::Px(HUD_PADDING + HUD_FONT_SIZE + 5.0),
+            right: Val::Px(HUD_PADDING),
+            ..default()
+        },
+    )
+}
+
 /// Returns the timer color based on race status
 pub fn timer_color(status: &crate::hud::components::RaceStatus) -> TextColor {
     use crate::hud::components::RaceStatus;

@@ -3,9 +3,6 @@ pub const ROAD_SEGMENT_LENGTH: f32 = ROAD_WIDTH; // Square segments makes ALOT o
 pub const STARTING_LINE_WIDTH: f32 = ROAD_WIDTH;
 pub const STARTING_LINE_HEIGHT: f32 = 2.0;
 
-/// Multiplier for positioning the start line ahead of the car's starting point
-pub const START_LINE_Y_OFFSET_MULTIPLIER: f32 = 1.5;
-
 /// Z-index for the starting line (above road segments)
 pub const STARTING_LINE_Z: f32 = 1.5;
 
