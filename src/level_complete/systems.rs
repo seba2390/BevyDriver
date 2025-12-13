@@ -1,7 +1,7 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
 
-use crate::constants::GameState;
+use crate::constants::{CurrentLevel, GameState};
 use crate::level_complete::components::{LevelCompleteButtonAction, OnLevelCompleteScreen};
 use crate::styles::colors::{BUTTON_HOVERED_COLOR, BUTTON_NORMAL_COLOR, BUTTON_PRESSED_COLOR, OVERLAY_BACKGROUND_COLOR};
 use crate::styles::menu::{LARGE_BUTTON_WIDTH, button_node, button_text_style, column_centered, fullscreen_centered, title_style};
@@ -73,16 +73,20 @@ pub fn level_complete_action(
     >,
     mut app_exit_writer: MessageWriter<AppExit>,
     mut game_state: ResMut<NextState<GameState>>,
+    mut current_level: ResMut<CurrentLevel>,
 ) {
     for (interaction, button_action) in &interaction_query {
         if *interaction == Interaction::Pressed {
             match button_action {
                 LevelCompleteButtonAction::RestartLevel => {
-                    // Restart the same level
+                    // Restart the current level (level stays the same)
                     game_state.set(GameState::Playing);
                 }
                 LevelCompleteButtonAction::NextLevel => {
-                    // TODO: Increment level counter, load next track
+                    if current_level.0 >= 3 {
+                        panic!("No more levels available! You've completed all 3 levels.");
+                    }
+                    current_level.0 += 1;
                     game_state.set(GameState::Playing);
                 }
                 LevelCompleteButtonAction::MainMenu => {

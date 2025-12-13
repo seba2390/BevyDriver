@@ -1,5 +1,16 @@
 use bevy::prelude::*;
 
+// -- Current Level -- //
+/// Resource to track the current level (1, 2, or 3)
+#[derive(Resource)]
+pub struct CurrentLevel(pub usize);
+
+impl Default for CurrentLevel {
+    fn default() -> Self {
+        CurrentLevel(1)
+    }
+}
+
 // -- Game State -- //
 /// Global game state enum for managing menu and gameplay transitions
 #[derive(Clone, Copy, Default, Eq, PartialEq, Debug, Hash, States)]

@@ -10,7 +10,7 @@ mod styles;
 
 use car::constants::CAR_HEIGHT;
 use car::systems::{handle_input, move_car, spawn_car};
-use constants::{GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
+use constants::{CurrentLevel, GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
 use hud::systems::{
     check_finish_line_crossing, check_race_finished, check_start_line_crossing,
     handle_off_road_logic, init_race_state, spawn_off_road_ui, spawn_timer_ui,
@@ -23,7 +23,7 @@ use level_complete::systems::{
 use start_menu::systems::{button_system, cleanup_menu, menu_action, spawn_menu};
 use road::components::Direction;
 use road::systems::{check_car_on_road, spawn_finish_line, spawn_start_line, spawn_track};
-use road::tracks::{TRACK_1, TRACK_2, TRACK_3};
+use road::tracks::get_track;
 
 use crate::hud::systems::spawn_level_text_ui;
 
@@ -39,6 +39,8 @@ fn main() {
         }))
         // Initialize game state (starts in Menu by default)
         .init_state::<GameState>()
+        // Initialize current level resource
+        .init_resource::<CurrentLevel>()
         // Spawn camera once on startup (persists across states)
         .add_systems(Startup, spawn_camera)
         // Menu state systems
@@ -84,8 +86,9 @@ fn setup_game(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    current_level: Res<CurrentLevel>,
 ) {
-    let track = &TRACK_1;
+    let track = get_track(current_level.0);
 
     spawn_car(&mut commands, track.starting_point);
     spawn_track(&mut commands, &mut meshes, &mut materials, track);
@@ -103,6 +106,6 @@ fn setup_game(
 
     spawn_off_road_ui(&mut commands);
     spawn_timer_ui(&mut commands);
-    spawn_level_text_ui(&mut commands);
+    spawn_level_text_ui(&mut commands, &current_level);
     init_race_state(commands, track.starting_point.y);
 }

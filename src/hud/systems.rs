@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
 use crate::car::components::Car;
-use crate::constants::GameState;
+use crate::constants::{CurrentLevel, GameState};
 use crate::hud::components::{OffRoadText, LevelText, RaceState, RaceStatus, TimerText};
 use crate::hud::helpers::{format_elapsed_time, has_crossed_line, is_within_line_x_bounds};
 use crate::start_menu::components::GameEntity;
@@ -10,9 +10,9 @@ use crate::road::components::{Direction, FinishLine, StartLine};
 use crate::styles::hud::{off_road_warning_style, level_text_style, timer_color, timer_style};
 
 /// Spawns the off the road level text UI element
-pub fn spawn_level_text_ui(commands: &mut Commands) {
+pub fn spawn_level_text_ui(commands: &mut Commands, current_level: &CurrentLevel) {
     commands.spawn((
-        Text::new("Level 1"),
+        Text::new(format!("Level {}", current_level.0)),
         level_text_style(),
         LevelText,
         GameEntity,

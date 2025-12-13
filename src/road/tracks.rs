@@ -162,3 +162,13 @@ pub const TRACK_3: Track = Track {
     layout: &TRACK_3_LAYOUT,
     starting_point: Vec2::new(-2.0 * ROAD_SEGMENT_LENGTH, 0.0),
 };
+
+/// Returns the track for the given level number (1, 2, or 3)
+pub fn get_track(level: usize) -> &'static Track {
+    match level {
+        1 => &TRACK_1,
+        2 => &TRACK_2,
+        3 => &TRACK_3,
+        _ => panic!("Invalid level: {}. Only levels 1-3 are available.", level),
+    }
+}
