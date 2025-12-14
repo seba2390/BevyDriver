@@ -1,13 +1,11 @@
 use bevy::prelude::*;
 
+use crate::hud::constants::{
+    CONTROLS_HINT_COLOR, CONTROLS_HINT_FONT_SIZE, CONTROLS_HINT_LINE_HEIGHT,
+    CONTROLS_HINT_PADDING, CONTROLS_HINT_TEXT_OFFSET, HUD_FONT_SIZE, HUD_PADDING,
+    MULTIPLIER_FONT_SIZE_RATIO, MULTIPLIER_TOP_SPACING,
+};
 use crate::styles::colors::*;
-
-// ============================================================================
-// Layout Constants
-// ============================================================================
-
-pub const HUD_FONT_SIZE: f32 = 40.0;
-pub const HUD_PADDING: f32 = 10.0;
 
 // ============================================================================
 // Style Builders
@@ -74,14 +72,14 @@ pub fn timer_style() -> (TextFont, TextColor, TextLayout, Node) {
 pub fn multiplier_style() -> (TextFont, TextColor, TextLayout, Node) {
     (
         TextFont {
-            font_size: HUD_FONT_SIZE * 0.7,
+            font_size: HUD_FONT_SIZE * MULTIPLIER_FONT_SIZE_RATIO,
             ..default()
         },
         TextColor(WARNING_TEXT_COLOR),
         TextLayout::new_with_justify(Justify::Right),
         Node {
             position_type: PositionType::Absolute,
-            top: Val::Px(HUD_PADDING + HUD_FONT_SIZE + 5.0),
+            top: Val::Px(HUD_PADDING + HUD_FONT_SIZE + MULTIPLIER_TOP_SPACING),
             right: Val::Px(HUD_PADDING),
             ..default()
         },
@@ -96,4 +94,37 @@ pub fn timer_color(status: &crate::hud::components::RaceStatus) -> TextColor {
         RaceStatus::Racing => TextColor(TIMER_RACING_COLOR),
         RaceStatus::Finished => TextColor(TIMER_FINISHED_COLOR),
     }
+}
+
+// ============================================================================
+// Controls Hint Style
+// ============================================================================
+
+/// Controls hint text style for a specific line (bottom-left corner)
+/// line_index: 0 = top line (Accelerate), 1 = Steer, 2 = Brake, 3 = ESC Pause
+pub fn controls_hint_line_style(line_index: usize) -> (TextFont, TextColor, TextLayout, Node) {
+    // Calculate bottom offset: line 0 is at top, so higher bottom value
+    let bottom_offset =
+        CONTROLS_HINT_PADDING + (3 - line_index) as f32 * CONTROLS_HINT_LINE_HEIGHT;
+    // Left offset to leave room for arrow gizmos (ESC line starts further left since no arrow)
+    let left_offset = if line_index == 3 {
+        CONTROLS_HINT_PADDING // ESC line - no arrow, so align with edge
+    } else {
+        CONTROLS_HINT_PADDING + CONTROLS_HINT_TEXT_OFFSET // Arrow lines - offset for gizmo space
+    };
+
+    (
+        TextFont {
+            font_size: CONTROLS_HINT_FONT_SIZE,
+            ..default()
+        },
+        TextColor(CONTROLS_HINT_COLOR),
+        TextLayout::new_with_justify(Justify::Left),
+        Node {
+            position_type: PositionType::Absolute,
+            bottom: Val::Px(bottom_offset),
+            left: Val::Px(left_offset),
+            ..default()
+        },
+    )
 }

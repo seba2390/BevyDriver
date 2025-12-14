@@ -20,14 +20,23 @@ pub const LEVEL_CARD_SPACING: f32 = 10.0;
 /// Padding inside each level card
 pub const LEVEL_CARD_PADDING: f32 = 15.0;
 
-/// Width reserved for the mini-map preview area (for future use)
-pub const MINI_MAP_WIDTH: f32 = 60.0;
+/// Width reserved for the mini-map preview area
+pub const MINI_MAP_WIDTH: f32 = 80.0;
 
-/// Height of the mini-map preview area (for future use)
-pub const MINI_MAP_HEIGHT: f32 = 50.0;
+/// Height of the mini-map preview area
+pub const MINI_MAP_HEIGHT: f32 = 70.0;
 
 /// Font size for level number
 pub const LEVEL_NUMBER_FONT_SIZE: f32 = 28.0;
+
+/// Scroll speed multiplier for mouse wheel scrolling
+pub const SCROLL_SPEED: f32 = 2.0;
+
+/// Width of the scrollbar track
+pub const SCROLLBAR_WIDTH: f32 = 12.0;
+
+/// Margin between the level list and scrollbar
+pub const SCROLLBAR_MARGIN: f32 = 8.0;
 
 /// Font size for level time
 pub const LEVEL_TIME_FONT_SIZE: f32 = 20.0;

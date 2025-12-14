@@ -5,7 +5,9 @@ use rand::Rng;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 use rayon::prelude::*;
+use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
+use std::hash::{Hash, Hasher};
 
 use crate::constants::{WINDOW_HEIGHT, WINDOW_WIDTH};
 use crate::road::components::{Direction, RoadSegmentType};
@@ -130,12 +132,22 @@ pub fn generate_random_track(config: &TrackGeneratorConfig) -> Option<GeneratedT
     let half_width = (WINDOW_WIDTH as f32 / 2.0 / ROAD_SEGMENT_LENGTH) as i32 - margin;
     let half_height = (WINDOW_HEIGHT as f32 / 2.0 / ROAD_SEGMENT_LENGTH) as i32 - margin;
 
+    // Helper to derive a unique seed from the base seed and attempt index
+    // Using a hash ensures no overlap between different base seeds
+    let derive_seed = |base_seed: u64, attempt: u64| -> u64 {
+        let mut hasher = DefaultHasher::new();
+        base_seed.hash(&mut hasher);
+        attempt.hash(&mut hasher);
+        hasher.finish()
+    };
+
     // Helper to run a batch of attempts in parallel
     let run_batch = |base_seed: u64| {
         // Try 1000 attempts in parallel
         (0..1000).into_par_iter().find_map_any(|i| {
-            // Derive a unique seed for this attempt
-            let attempt_seed = base_seed.wrapping_add(i as u64);
+            // Derive a unique seed for this attempt using hash-based derivation
+            // This prevents overlap between different levels' seed ranges
+            let attempt_seed = derive_seed(base_seed, i as u64);
             let mut rng = ChaCha8Rng::seed_from_u64(attempt_seed);
 
             try_generate_track(&mut rng, config, half_width, half_height)

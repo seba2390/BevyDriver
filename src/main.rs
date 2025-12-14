@@ -1,6 +1,7 @@
 use bevy::core_pipeline::tonemapping::{DebandDither, Tonemapping};
 use bevy::post_process::bloom::{Bloom, BloomCompositeMode, BloomPrefilter};
 use bevy::prelude::*;
+use bevy_scrollbar::ScrollbarPlugin;
 
 mod car;
 mod constants;
@@ -18,11 +19,12 @@ mod utils;
 
 use car::constants::CAR_HEIGHT;
 use car::systems::{handle_input, move_car, spawn_car};
-use constants::{CurrentLevel, GameState, ResumeFromPause, WINDOW_HEIGHT, WINDOW_WIDTH, BLOOM_INTENSITY};
+use constants::{CurrentLevel, GameState, ResumeFromPause, WINDOW_HEIGHT, WINDOW_WIDTH, BLOOM_INTENSITY, GAME_BACKGROUND_COLOR};
 use hud::systems::{
     check_finish_line_crossing, check_race_finished, check_start_line_crossing,
-    handle_off_road_logic, init_race_state, spawn_multiplier_ui, spawn_off_road_ui, spawn_timer_ui,
-    tick_race_timer, update_multiplier_display, update_timer_display,
+    handle_off_road_logic, init_race_state, render_controls_hint_arrows, spawn_controls_hint,
+    spawn_multiplier_ui, spawn_off_road_ui, spawn_timer_ui, tick_race_timer, update_controls_hint,
+    update_multiplier_display, update_timer_display,
 };
 use level_complete::systems::{
     level_complete_action,
@@ -30,7 +32,10 @@ use level_complete::systems::{
 };
 use level_complete::components::OnLevelCompleteScreen;
 use level_menu::components::OnLevelMenuScreen;
-use level_menu::systems::{level_menu_action, spawn_level_menu};
+use level_menu::minimap::{
+    capture_minimaps, cleanup_minimap_rendering, setup_minimap_rendering, MinimapCache,
+};
+use level_menu::systems::{level_menu_action, spawn_level_menu, update_minimap_previews};
 use pause_menu::components::OnPauseMenuScreen;
 use pause_menu::systems::{
     handle_pause_input, handle_resume_input, pause_menu_action, spawn_pause_menu,
@@ -59,14 +64,17 @@ use crate::hud::systems::spawn_level_text_ui;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "Bevy Driver".to_string(),
-                resolution: (WINDOW_WIDTH, WINDOW_HEIGHT).into(),
+        .add_plugins((
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "Bevy Driver".to_string(),
+                    resolution: (WINDOW_WIDTH, WINDOW_HEIGHT).into(),
+                    ..default()
+                }),
                 ..default()
             }),
-            ..default()
-        }))
+            ScrollbarPlugin,
+        ))
         // Initialize game state (starts in Menu by default)
         .init_state::<GameState>()
         // Initialize current level resource
@@ -75,6 +83,8 @@ fn main() {
         .init_resource::<CurrentSave>()
         // Initialize resume from pause flag
         .init_resource::<ResumeFromPause>()
+        // Set the clear color (background color)
+        .insert_resource(ClearColor(GAME_BACKGROUND_COLOR))
         // Spawn camera once on startup (persists across states)
         .add_systems(Startup, spawn_camera)
         // Menu state systems
@@ -107,11 +117,18 @@ fn main() {
                 .run_if(in_state(GameState::LoadGameMenu)),
         )
         // Level Menu state systems
-        .add_systems(OnEnter(GameState::LevelMenu), spawn_level_menu)
-        .add_systems(OnExit(GameState::LevelMenu), despawn_all::<OnLevelMenuScreen>)
+        .init_resource::<MinimapCache>()
+        .add_systems(OnEnter(GameState::LevelMenu), (spawn_level_menu, setup_minimap_rendering).chain())
+        .add_systems(OnExit(GameState::LevelMenu), (despawn_all::<OnLevelMenuScreen>, cleanup_minimap_rendering))
         .add_systems(
             Update,
-            (standard_button_system, level_menu_action).run_if(in_state(GameState::LevelMenu)),
+            (
+                standard_button_system,
+                level_menu_action,
+                capture_minimaps,
+                update_minimap_previews,
+            )
+                .run_if(in_state(GameState::LevelMenu)),
         )
         // Playing state systems
         .add_systems(OnEnter(GameState::Playing), (
@@ -132,6 +149,8 @@ fn main() {
                 tick_race_timer,
                 update_timer_display,
                 update_multiplier_display,
+                update_controls_hint,
+                render_controls_hint_arrows,
                 check_race_finished,
                 handle_pause_input,
             )
@@ -230,6 +249,7 @@ fn setup_game(
     spawn_off_road_ui(&mut commands);
     spawn_timer_ui(&mut commands);
     spawn_multiplier_ui(&mut commands);
+    spawn_controls_hint(&mut commands);
     spawn_level_text_ui(&mut commands, &current_level);
     init_race_state(commands, track.starting_point.y);
 }

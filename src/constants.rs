@@ -49,3 +49,6 @@ pub const LEFT_BOUNDARY: f32 = -(WINDOW_WIDTH as f32) / 2.0;
 pub const RIGHT_BOUNDARY: f32 = (WINDOW_WIDTH as f32) / 2.0;
 pub const TOP_BOUNDARY: f32 = (WINDOW_HEIGHT as f32) / 2.0;
 pub const BOTTOM_BOUNDARY: f32 = -(WINDOW_HEIGHT as f32) / 2.0;
+
+// -- Colors -- //
+pub const GAME_BACKGROUND_COLOR: Color = Color::srgb(0.05, 0.05, 0.05);

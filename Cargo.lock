@@ -1205,6 +1205,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_scrollbar"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7d69e371cc3b33d22790eada852b8aa4ae48dcc7d59f1211a7a60d2e41b7e55"
+dependencies = [
+ "bevy",
+ "log",
+]
+
+[[package]]
 name = "bevy_shader"
 version = "0.17.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2159,6 +2169,7 @@ name = "driving_game"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy_scrollbar",
  "chrono",
  "directories",
  "rand",

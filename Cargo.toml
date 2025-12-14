@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.17"
+bevy_scrollbar = "0.5"
 rand = "0.9"
 rand_chacha = "0.9"
 rayon = "1.11.0"

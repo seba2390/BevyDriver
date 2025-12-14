@@ -17,6 +17,17 @@ pub struct TimerText;
 #[derive(Component)]
 pub struct MultiplierText;
 
+/// Component for the controls hint that fades out
+#[derive(Component)]
+pub struct ControlsHint {
+    /// Timer tracking how long the hint has been visible
+    pub timer: f32,
+    /// Duration before the hint starts fading (seconds)
+    pub fade_delay: f32,
+    /// Duration of the fade animation (seconds)
+    pub fade_duration: f32,
+}
+
 /// The current status of the race
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub enum RaceStatus {

@@ -124,3 +124,29 @@ pub fn is_point_in_segment(local_pos: Vec2, segment_type: RoadSegmentType) -> bo
         RoadSegmentType::CornerLeft => is_point_in_corner_left(local_pos),
     }
 }
+
+/// Compute the bounding box of a track's world-space positions.
+/// Returns (min_corner, max_corner) representing the AABB of all segment centers.
+/// The actual visual bounds should add ROAD_WIDTH/2 padding on all sides.
+pub fn compute_track_bounds(starting_point: Vec2, layout: &[RoadSegmentType]) -> (Vec2, Vec2) {
+    let mut min = starting_point;
+    let mut max = starting_point;
+
+    let mut current_pos = starting_point;
+    let mut current_dir = Direction::Up;
+
+    for &segment in layout {
+        // Move to next position
+        let offset = get_position_offset(current_dir);
+        current_pos += offset;
+
+        // Update bounds
+        min = min.min(current_pos);
+        max = max.max(current_pos);
+
+        // Update direction for next iteration
+        current_dir = get_exit_direction(current_dir, segment);
+    }
+
+    (min, max)
+}

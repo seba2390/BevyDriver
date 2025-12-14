@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_scrollbar::{Scrollbar, ScrollSpeed};
 
 use crate::constants::{CurrentLevel, GameState, ResumeFromPause};
 use crate::level_menu::components::{
@@ -6,6 +7,7 @@ use crate::level_menu::components::{
     LevelTimeDisplay, OnLevelMenuScreen,
 };
 use crate::level_menu::constants::*;
+use crate::level_menu::minimap::MinimapCache;
 use crate::save::CurrentSave;
 use crate::styles::colors::{
     BUTTON_NORMAL_COLOR, MENU_BACKGROUND_COLOR, MENU_TEXT_COLOR, SECONDARY_TEXT_COLOR,
@@ -49,29 +51,64 @@ pub fn spawn_level_menu(mut commands: Commands, current_save: Res<CurrentSave>) 
         });
 }
 
-/// Spawns the scrollable list of level cards
+/// Spawns the scrollable list of level cards with a scrollbar
 fn spawn_level_list(
     parent: &mut ChildSpawnerCommands,
     save_data: Option<&crate::save::SaveData>,
     highest_level: usize,
 ) {
+    // Calculate if scrolling is needed based on content height vs container height
+    // Each card is LEVEL_CARD_HEIGHT + LEVEL_CARD_SPACING (except the last one)
+    let content_height = highest_level as f32 * LEVEL_CARD_HEIGHT
+        + (highest_level.saturating_sub(1)) as f32 * LEVEL_CARD_SPACING;
+    let needs_scrollbar = content_height > LEVEL_LIST_HEIGHT;
+
+    // Container for the scrollable content and scrollbar (siblings)
     parent
-        .spawn((
-            Node {
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Center,
-                max_height: Val::Px(LEVEL_LIST_HEIGHT),
-                overflow: Overflow::scroll_y(),
-                margin: UiRect::vertical(Val::Px(LEVEL_LIST_MARGIN)),
-                ..default()
-            },
-            LevelListContainer,
-        ))
-        .with_children(|scroll_parent| {
-            // Show all unlocked levels (1 through highest_level)
-            for level in 1..=highest_level {
-                let best_time = save_data.and_then(|s| s.level_times.get(&level).copied());
-                spawn_level_card(scroll_parent, level, best_time);
+        .spawn(Node {
+            flex_direction: FlexDirection::Row,
+            align_items: AlignItems::Stretch,
+            margin: UiRect::vertical(Val::Px(LEVEL_LIST_MARGIN)),
+            height: Val::Px(LEVEL_LIST_HEIGHT),
+            ..default()
+        })
+        .with_children(|container| {
+            // Scrollable content
+            let scrollable_id = container
+                .spawn((
+                    Node {
+                        flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::Center,
+                        height: Val::Percent(100.0),
+                        overflow: Overflow::scroll_y(),
+                        ..default()
+                    },
+                    LevelListContainer,
+                    ScrollSpeed(SCROLL_SPEED),
+                ))
+                .with_children(|scroll_parent| {
+                    // Show all unlocked levels (1 through highest_level)
+                    for level in 1..=highest_level {
+                        let best_time = save_data.and_then(|s| s.level_times.get(&level).copied());
+                        spawn_level_card(scroll_parent, level, best_time);
+                    }
+                })
+                .id();
+
+            // Only spawn scrollbar if content exceeds container height
+            // bevy_scrollbar crashes when max scroll < 0 (content smaller than container)
+            if needs_scrollbar {
+                container.spawn((
+                    Scrollbar { scrollable: scrollable_id },
+                    Node {
+                        width: Val::Px(SCROLLBAR_WIDTH),
+                        height: Val::Percent(100.0),
+                        margin: UiRect::left(Val::Px(SCROLLBAR_MARGIN)),
+                        ..default()
+                    },
+                    BackgroundColor(Color::srgba(0.3, 0.3, 0.3, 0.5)),
+                    BorderRadius::all(Val::Px(SCROLLBAR_WIDTH / 2.0)),
+                ));
             }
         });
 }
@@ -163,7 +200,7 @@ fn spawn_level_card(parent: &mut ChildSpawnerCommands, level: usize, best_time: 
                 ));
             });
 
-            // Mini-map preview placeholder (for future implementation)
+            // Mini-map preview container (populated by minimap rendering system)
             card.spawn((
                 Node {
                     width: Val::Px(MINI_MAP_WIDTH),
@@ -174,19 +211,9 @@ fn spawn_level_card(parent: &mut ChildSpawnerCommands, level: usize, best_time: 
                     ..default()
                 },
                 BorderColor::all(SECONDARY_TEXT_COLOR),
+                BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.5)),
                 LevelMiniMapPreview(level),
-            ))
-            .with_children(|preview| {
-                // Placeholder text - replace with actual mini-map rendering later
-                preview.spawn((
-                    Text::new("🗺"),
-                    TextFont {
-                        font_size: 20.0,
-                        ..default()
-                    },
-                    TextColor(SECONDARY_TEXT_COLOR),
-                ));
-            });
+            ));
         });
 }
 
@@ -224,6 +251,42 @@ pub fn level_menu_action(
                     game_state.set(GameState::StartMenu);
                 }
             }
+        }
+    }
+}
+
+// ============================================================================
+// Minimap Preview Updates
+// ============================================================================
+
+/// Marker for minimap preview nodes that have been populated with an image.
+#[derive(Component)]
+pub struct MinimapImageAdded;
+
+/// System to update minimap preview nodes with rendered images from the cache.
+pub fn update_minimap_previews(
+    mut commands: Commands,
+    minimap_cache: Res<MinimapCache>,
+    preview_query: Query<(Entity, &LevelMiniMapPreview), Without<MinimapImageAdded>>,
+) {
+    for (entity, preview) in preview_query.iter() {
+        if let Some(image_handle) = minimap_cache.images.get(&preview.0) {
+            // Add the image as a child of the preview container
+            commands.entity(entity).with_children(|parent| {
+                parent.spawn((
+                    ImageNode {
+                        image: image_handle.clone(),
+                        ..default()
+                    },
+                    Node {
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(100.0),
+                        ..default()
+                    },
+                ));
+            });
+            // Mark as populated to avoid re-adding
+            commands.entity(entity).insert(MinimapImageAdded);
         }
     }
 }
