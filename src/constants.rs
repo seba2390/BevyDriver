@@ -18,6 +18,10 @@ pub enum GameState {
     /// Main menu screen (shown first on game start)
     #[default]
     StartMenu,
+    /// Player name entry screen (shown when starting a new game)
+    NewGameNameEntry,
+    /// Load game menu (shown when loading a saved game)
+    LoadGameMenu,
     /// Active gameplay - race in progress
     Playing,
     /// Level complete screen (shown when race finishes)

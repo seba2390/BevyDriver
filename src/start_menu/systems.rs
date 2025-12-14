@@ -17,7 +17,8 @@ pub fn spawn_menu(mut commands: Commands) {
         .with_children(|parent| {
             parent.spawn(menu_panel()).with_children(|parent| {
                 spawn_title(parent);
-                spawn_button(parent, "New Game", MenuButtonAction::Play);
+                spawn_button(parent, "New Game", MenuButtonAction::NewGame);
+                spawn_button(parent, "Load Game", MenuButtonAction::LoadGame);
                 spawn_button(parent, "Quit", MenuButtonAction::Quit);
             });
         });
@@ -63,7 +64,7 @@ pub fn button_system(
     }
 }
 
-/// Handles menu button actions (Play, Quit)
+/// Handles menu button actions (NewGame, LoadGame, Quit)
 pub fn menu_action(
     interaction_query: Query<
         (&Interaction, &MenuButtonAction),
@@ -75,7 +76,8 @@ pub fn menu_action(
     for (interaction, menu_button_action) in &interaction_query {
         if *interaction == Interaction::Pressed {
             match menu_button_action {
-                MenuButtonAction::Play => game_state.set(GameState::Playing),
+                MenuButtonAction::NewGame => game_state.set(GameState::NewGameNameEntry),
+                MenuButtonAction::LoadGame => game_state.set(GameState::LoadGameMenu),
                 MenuButtonAction::Quit => { app_exit_writer.write(AppExit::Success); }
             }
         }

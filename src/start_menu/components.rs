@@ -11,6 +11,7 @@ pub struct GameEntity;
 /// All actions that can be triggered from menu button clicks
 #[derive(Component)]
 pub enum MenuButtonAction {
-    Play,
+    NewGame,
+    LoadGame,
     Quit,
 }

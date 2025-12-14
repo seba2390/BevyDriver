@@ -6,6 +6,9 @@ mod car;
 mod constants;
 mod hud;
 mod level_complete;
+mod load_menu;
+mod name_entry;
+mod save;
 mod start_menu;
 mod road;
 mod styles;
@@ -24,6 +27,17 @@ use level_complete::systems::{
     spawn_level_complete_menu,
 };
 use level_complete::components::OnLevelCompleteScreen;
+use load_menu::components::OnLoadMenuScreen;
+use load_menu::systems::{
+    cleanup_load_menu, handle_delete_click, handle_save_slot_click, load_menu_action,
+    load_menu_button_system, spawn_load_menu, delete_confirm_button_system, handle_delete_confirm_action,
+};
+use name_entry::components::OnNameEntryScreen;
+use name_entry::systems::{
+    cleanup_name_entry, handle_name_input, name_entry_action, name_entry_button_system,
+    spawn_name_entry,
+};
+use save::CurrentSave;
 use start_menu::systems::{button_system, menu_action, spawn_menu};
 use start_menu::components::{OnMenuScreen, GameEntity};
 use utils::despawn_all;
@@ -48,6 +62,8 @@ fn main() {
         .init_state::<GameState>()
         // Initialize current level resource
         .init_resource::<CurrentLevel>()
+        // Initialize current save resource
+        .init_resource::<CurrentSave>()
         // Spawn camera once on startup (persists across states)
         .add_systems(Startup, spawn_camera)
         // Menu state systems
@@ -56,6 +72,29 @@ fn main() {
         .add_systems(
             Update,
             (button_system, menu_action).run_if(in_state(GameState::StartMenu)),
+        )
+        // Name Entry state systems
+        .add_systems(OnEnter(GameState::NewGameNameEntry), spawn_name_entry)
+        .add_systems(OnExit(GameState::NewGameNameEntry), (despawn_all::<OnNameEntryScreen>, cleanup_name_entry))
+        .add_systems(
+            Update,
+            (handle_name_input, name_entry_button_system, name_entry_action)
+                .run_if(in_state(GameState::NewGameNameEntry)),
+        )
+        // Load Menu state systems
+        .add_systems(OnEnter(GameState::LoadGameMenu), spawn_load_menu)
+        .add_systems(OnExit(GameState::LoadGameMenu), (despawn_all::<OnLoadMenuScreen>, cleanup_load_menu))
+        .add_systems(
+            Update,
+            (
+                load_menu_button_system,
+                handle_save_slot_click,
+                handle_delete_click,
+                delete_confirm_button_system,
+                handle_delete_confirm_action,
+                load_menu_action,
+            )
+                .run_if(in_state(GameState::LoadGameMenu)),
         )
         // Playing state systems
         .add_systems(OnEnter(GameState::Playing), setup_game)

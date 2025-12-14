@@ -137,7 +137,7 @@ pub fn generate_random_track(config: &TrackGeneratorConfig) -> Option<GeneratedT
             // Derive a unique seed for this attempt
             let attempt_seed = base_seed.wrapping_add(i as u64);
             let mut rng = ChaCha8Rng::seed_from_u64(attempt_seed);
-            
+
             try_generate_track(&mut rng, config, half_width, half_height)
         })
     };
