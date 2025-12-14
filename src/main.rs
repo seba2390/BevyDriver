@@ -9,6 +9,7 @@ mod level_complete;
 mod start_menu;
 mod road;
 mod styles;
+mod utils;
 
 use car::constants::CAR_HEIGHT;
 use car::systems::{handle_input, move_car, spawn_car};
@@ -19,10 +20,13 @@ use hud::systems::{
     tick_race_timer, update_multiplier_display, update_timer_display,
 };
 use level_complete::systems::{
-    cleanup_level_complete_menu, level_complete_action, level_complete_button_system,
+    level_complete_action, level_complete_button_system,
     spawn_level_complete_menu,
 };
-use start_menu::systems::{button_system, cleanup_menu, menu_action, spawn_menu};
+use level_complete::components::OnLevelCompleteScreen;
+use start_menu::systems::{button_system, menu_action, spawn_menu};
+use start_menu::components::{OnMenuScreen, GameEntity};
+use utils::despawn_all;
 use road::components::{Direction, Track};
 use road::systems::{check_car_on_road, spawn_finish_line, spawn_start_line, spawn_track, update_segment_visited_status};
 use road::tracks::get_track;
@@ -48,7 +52,7 @@ fn main() {
         .add_systems(Startup, spawn_camera)
         // Menu state systems
         .add_systems(OnEnter(GameState::StartMenu), spawn_menu)
-        .add_systems(OnExit(GameState::StartMenu), cleanup_menu)
+        .add_systems(OnExit(GameState::StartMenu), despawn_all::<OnMenuScreen>)
         .add_systems(
             Update,
             (button_system, menu_action).run_if(in_state(GameState::StartMenu)),
@@ -75,7 +79,7 @@ fn main() {
         )
         // Level Complete state systems
         .add_systems(OnEnter(GameState::LevelComplete), spawn_level_complete_menu)
-        .add_systems(OnExit(GameState::LevelComplete), cleanup_level_complete_menu)
+        .add_systems(OnExit(GameState::LevelComplete), (despawn_all::<OnLevelCompleteScreen>, despawn_all::<GameEntity>))
         .add_systems(
             Update,
             (level_complete_button_system, level_complete_action)

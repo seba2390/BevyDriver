@@ -81,24 +81,3 @@ pub fn menu_action(
         }
     }
 }
-
-// ============================================================================
-// Cleanup
-// ============================================================================
-
-/// Despawns all menu entities when leaving the menu state
-pub fn cleanup_menu(mut commands: Commands, query: Query<Entity, With<OnMenuScreen>>) {
-    for entity in &query {
-        commands.entity(entity).despawn();
-    }
-}
-
-/// Despawns all gameplay entities when leaving the playing state
-pub fn cleanup_game(
-    mut commands: Commands,
-    query: Query<Entity, With<crate::start_menu::components::GameEntity>>,
-) {
-    for entity in &query {
-        commands.entity(entity).despawn();
-    }
-}

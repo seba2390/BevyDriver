@@ -97,22 +97,3 @@ pub fn level_complete_action(
         }
     }
 }
-
-// ============================================================================
-// Cleanup
-// ============================================================================
-
-/// Despawns all level complete menu entities and game entities when leaving this state
-pub fn cleanup_level_complete_menu(
-    mut commands: Commands,
-    menu_query: Query<Entity, With<OnLevelCompleteScreen>>,
-    game_query: Query<Entity, With<crate::start_menu::components::GameEntity>>,
-) {
-    for entity in &menu_query {
-        commands.entity(entity).despawn();
-    }
-    // Also clean up the game entities that were visible behind the overlay
-    for entity in &game_query {
-        commands.entity(entity).despawn();
-    }
-}

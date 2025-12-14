@@ -11,7 +11,7 @@ use crate::road::components::{
 use crate::road::constants::*;
 use crate::road::helpers::{
     get_direction_vector, get_exit_direction, get_position_offset, get_rotation,
-    is_point_in_corner_left, is_point_in_corner_right, is_point_in_straight,
+    is_point_in_segment, world_to_local_2d,
 };
 
 /// Spawns the start line at the given position
@@ -288,39 +288,11 @@ pub fn check_car_on_road(
         let mut corner_on_road = false;
 
         for (road_transform, road_segment) in road_query.iter() {
-            // Transform corner to road's local space
-            // Inverse transform is needed because transform_point applies the transform.
-            // We want to go from World -> Local.
-            // road_transform maps Local -> World.
-            // So we need road_transform.inverse().transform_point(corner)
-            // But wait, Bevy's Transform doesn't have a simple inverse method that returns a Transform.
-            // We can use compute_matrix().inverse().transform_point3()
+            let local_corner = world_to_local_2d(road_transform, *corner);
 
-            let local_corner = road_transform
-                .compute_affine()
-                .inverse()
-                .transform_point3(*corner)
-                .xy();
-
-            match road_segment.segment_type {
-                RoadSegmentType::Straight => {
-                    if is_point_in_straight(local_corner) {
-                        corner_on_road = true;
-                        break;
-                    }
-                }
-                RoadSegmentType::CornerRight => {
-                    if is_point_in_corner_right(local_corner) {
-                        corner_on_road = true;
-                        break;
-                    }
-                }
-                RoadSegmentType::CornerLeft => {
-                    if is_point_in_corner_left(local_corner) {
-                        corner_on_road = true;
-                        break;
-                    }
-                }
+            if is_point_in_segment(local_corner, road_segment.segment_type) {
+                corner_on_road = true;
+                break;
             }
         }
 
@@ -365,20 +337,9 @@ pub fn update_segment_visited_status(
         let mut car_touches_segment = false;
 
         for corner in car_corners.iter() {
-            // Transform corner to road's local space
-            let local_corner = road_transform
-                .compute_affine()
-                .inverse()
-                .transform_point3(*corner)
-                .xy();
+            let local_corner = world_to_local_2d(road_transform, *corner);
 
-            let is_on_segment = match road_segment.segment_type {
-                RoadSegmentType::Straight => is_point_in_straight(local_corner),
-                RoadSegmentType::CornerRight => is_point_in_corner_right(local_corner),
-                RoadSegmentType::CornerLeft => is_point_in_corner_left(local_corner),
-            };
-
-            if is_on_segment {
+            if is_point_in_segment(local_corner, road_segment.segment_type) {
                 car_touches_segment = true;
                 break;
             }
