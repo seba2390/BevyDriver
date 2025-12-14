@@ -55,6 +55,7 @@ impl SaveData {
     }
 
     /// Gets the best time for a level, if any
+    #[allow(dead_code)]
     pub fn get_best_time(&self, level: usize) -> Option<f32> {
         self.level_times.get(&level).copied()
     }
@@ -75,6 +76,7 @@ pub struct CurrentSave(pub Option<SaveData>);
 
 impl CurrentSave {
     /// Returns a reference to the current save data, if loaded
+    #[allow(dead_code)]
     pub fn get(&self) -> Option<&SaveData> {
         self.0.as_ref()
     }
@@ -90,6 +92,7 @@ impl CurrentSave {
     }
 
     /// Clears the current save (e.g., when returning to main menu)
+    #[allow(dead_code)]
     pub fn clear(&mut self) {
         self.0 = None;
     }

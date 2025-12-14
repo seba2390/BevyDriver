@@ -7,7 +7,7 @@ use crate::name_entry::components::{NameEntryButtonAction, NameInputText, OnName
 use crate::name_entry::constants::*;
 use crate::save::{save_exists, save_to_file, CurrentSave, SaveData};
 use crate::styles::colors::{
-    BUTTON_HOVERED_COLOR, BUTTON_NORMAL_COLOR, BUTTON_PRESSED_COLOR, MENU_BACKGROUND_COLOR, MENU_TEXT_COLOR,
+    BUTTON_NORMAL_COLOR, MENU_BACKGROUND_COLOR, MENU_TEXT_COLOR,
 };
 use crate::styles::menu::{
     STANDARD_BUTTON_WIDTH, button_node, button_text_style, column_centered, fullscreen_centered, title_style,
@@ -173,24 +173,8 @@ pub fn handle_name_input(
 }
 
 // ============================================================================
-// Button Interaction
+// Button Actions
 // ============================================================================
-
-/// Handles button hover and press visual feedback
-pub fn name_entry_button_system(
-    mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor),
-        (Changed<Interaction>, With<Button>),
-    >,
-) {
-    for (interaction, mut background_color) in &mut interaction_query {
-        *background_color = match *interaction {
-            Interaction::Pressed => BUTTON_PRESSED_COLOR.into(),
-            Interaction::Hovered => BUTTON_HOVERED_COLOR.into(),
-            Interaction::None => BUTTON_NORMAL_COLOR.into(),
-        };
-    }
-}
 
 /// Handles name entry screen button actions
 pub fn name_entry_action(

@@ -3,6 +3,27 @@ use bevy::prelude::*;
 use crate::styles::colors::*;
 
 // ============================================================================
+// Shared Button System
+// ============================================================================
+
+/// Standard button interaction system - handles hover and press visual feedback.
+/// Use this for all menus instead of duplicating the system per module.
+pub fn standard_button_system(
+    mut interaction_query: Query<
+        (&Interaction, &mut BackgroundColor),
+        (Changed<Interaction>, With<Button>),
+    >,
+) {
+    for (interaction, mut background_color) in &mut interaction_query {
+        *background_color = match *interaction {
+            Interaction::Pressed => BUTTON_PRESSED_COLOR.into(),
+            Interaction::Hovered => BUTTON_HOVERED_COLOR.into(),
+            Interaction::None => BUTTON_NORMAL_COLOR.into(),
+        };
+    }
+}
+
+// ============================================================================
 // Layout Constants
 // ============================================================================
 

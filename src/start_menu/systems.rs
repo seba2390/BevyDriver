@@ -3,7 +3,7 @@ use bevy::prelude::*;
 
 use crate::constants::GameState;
 use crate::start_menu::components::{MenuButtonAction, OnMenuScreen};
-use crate::styles::colors::{BUTTON_HOVERED_COLOR, BUTTON_NORMAL_COLOR, BUTTON_PRESSED_COLOR, MENU_BACKGROUND_COLOR};
+use crate::styles::colors::{BUTTON_NORMAL_COLOR, MENU_BACKGROUND_COLOR};
 use crate::styles::menu::{STANDARD_BUTTON_WIDTH, button_node, button_text_style, column_centered, fullscreen_centered, title_style};
 
 // ============================================================================
@@ -45,24 +45,8 @@ fn spawn_button(parent: &mut ChildSpawnerCommands, label: &str, action: MenuButt
 }
 
 // ============================================================================
-// Button Interaction
+// Button Actions
 // ============================================================================
-
-/// Handles button hover and press visual feedback
-pub fn button_system(
-    mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor),
-        (Changed<Interaction>, With<Button>),
-    >,
-) {
-    for (interaction, mut background_color) in &mut interaction_query {
-        *background_color = match *interaction {
-            Interaction::Pressed => BUTTON_PRESSED_COLOR.into(),
-            Interaction::Hovered => BUTTON_HOVERED_COLOR.into(),
-            Interaction::None => BUTTON_NORMAL_COLOR.into(),
-        };
-    }
-}
 
 /// Handles menu button actions (NewGame, LoadGame, Quit)
 pub fn menu_action(

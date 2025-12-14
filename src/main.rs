@@ -23,7 +23,7 @@ use hud::systems::{
     tick_race_timer, update_multiplier_display, update_timer_display,
 };
 use level_complete::systems::{
-    level_complete_action, level_complete_button_system,
+    level_complete_action,
     spawn_level_complete_menu,
 };
 use level_complete::components::OnLevelCompleteScreen;
@@ -34,11 +34,12 @@ use load_menu::systems::{
 };
 use name_entry::components::OnNameEntryScreen;
 use name_entry::systems::{
-    cleanup_name_entry, handle_name_input, name_entry_action, name_entry_button_system,
+    cleanup_name_entry, handle_name_input, name_entry_action,
     spawn_name_entry,
 };
 use save::CurrentSave;
-use start_menu::systems::{button_system, menu_action, spawn_menu};
+use start_menu::systems::{menu_action, spawn_menu};
+use styles::menu::standard_button_system;
 use start_menu::components::{OnMenuScreen, GameEntity};
 use utils::despawn_all;
 use road::components::{Direction, Track};
@@ -71,14 +72,14 @@ fn main() {
         .add_systems(OnExit(GameState::StartMenu), despawn_all::<OnMenuScreen>)
         .add_systems(
             Update,
-            (button_system, menu_action).run_if(in_state(GameState::StartMenu)),
+            (standard_button_system, menu_action).run_if(in_state(GameState::StartMenu)),
         )
         // Name Entry state systems
         .add_systems(OnEnter(GameState::NewGameNameEntry), spawn_name_entry)
         .add_systems(OnExit(GameState::NewGameNameEntry), (despawn_all::<OnNameEntryScreen>, cleanup_name_entry))
         .add_systems(
             Update,
-            (handle_name_input, name_entry_button_system, name_entry_action)
+            (handle_name_input, standard_button_system, name_entry_action)
                 .run_if(in_state(GameState::NewGameNameEntry)),
         )
         // Load Menu state systems
@@ -121,7 +122,7 @@ fn main() {
         .add_systems(OnExit(GameState::LevelComplete), (despawn_all::<OnLevelCompleteScreen>, despawn_all::<GameEntity>))
         .add_systems(
             Update,
-            (level_complete_button_system, level_complete_action)
+            (standard_button_system, level_complete_action)
                 .run_if(in_state(GameState::LevelComplete)),
         )
         .run();

@@ -26,6 +26,7 @@ pub enum Direction {
 #[derive(Component)]
 pub struct RoadSegment {
     pub segment_type: RoadSegmentType,
+    #[allow(dead_code)]
     pub direction: Direction,
 }
 

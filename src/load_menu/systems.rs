@@ -10,7 +10,7 @@ use crate::styles::colors::{
     OVERLAY_BACKGROUND_COLOR,
 };
 use crate::styles::menu::{
-    STANDARD_BUTTON_WIDTH, button_node, button_text_style, column_centered, fullscreen_centered, title_style,
+    STANDARD_BUTTON_WIDTH, button_text_style, column_centered, fullscreen_centered, title_style,
     BUTTON_HEIGHT, BUTTON_MARGIN,
 };
 
@@ -277,7 +277,7 @@ pub fn handle_delete_click(
     >,
     mut commands: Commands,
     mut delete_confirmation: ResMut<DeleteConfirmation>,
-    saves: Query<&SaveSlot>,
+    _saves: Query<&SaveSlot>,
     existing_overlay: Query<Entity, With<DeleteConfirmationOverlay>>,
 ) {
     for (interaction, delete_button) in &interaction_query {
