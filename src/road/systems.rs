@@ -6,7 +6,7 @@ use crate::car::constants::CAR_HEIGHT;
 use crate::car::helpers::get_car_corners;
 use crate::start_menu::components::GameEntity;
 use crate::road::components::{
-    Direction, FinishLine, RoadSegment, RoadSegmentType, StartLine, Track, Visited,
+    Direction, FinishLine, RoadEdge, RoadSegment, RoadSegmentType, StartLine, Track, Visited,
 };
 use crate::road::constants::*;
 use crate::road::helpers::{
@@ -106,7 +106,7 @@ fn spawn_straight_road(
     let center = current_endpoint + offset / 2.0;
 
     let road_sprite = Sprite {
-        color: UNVISITED_ROAD_SEGMENT_COLOR,
+        color: ROAD_SEGMENT_COLOR,
         custom_size: Some(Vec2::new(ROAD_WIDTH, ROAD_SEGMENT_LENGTH)),
         ..default()
     };
@@ -120,10 +120,58 @@ fn spawn_straight_road(
         direction: current_direction,
     };
 
-    commands.spawn((road_sprite, road_transform, road_component, GameEntity));
+    let segment_entity = commands.spawn((road_sprite, road_transform, road_component, GameEntity)).id();
+
+    // Spawn glowing edges on both sides of the road
+    spawn_straight_road_edges(commands, center, rotation, segment_entity);
 
     // Return the new endpoint (end of this segment)
     current_endpoint + offset
+}
+
+/// Spawns two edge sprites on either side of a straight road segment
+fn spawn_straight_road_edges(
+    commands: &mut Commands,
+    center: Vec2,
+    rotation: f32,
+    parent_segment: Entity,
+) {
+    let rotation_quat = Quat::from_rotation_z(rotation);
+
+    // Calculate perpendicular offset for edge placement (left and right of center)
+    // Place edges on the OUTSIDE of the road
+    let perpendicular = rotation_quat.mul_vec3(Vec3::X).xy();
+    let edge_offset = perpendicular * (ROAD_WIDTH / 2.0 + ROAD_EDGE_WIDTH / 2.0);
+
+    // Left edge
+    let left_edge_sprite = Sprite {
+        color: UNVISITED_EDGE_COLOR,
+        custom_size: Some(Vec2::new(ROAD_EDGE_WIDTH, ROAD_SEGMENT_LENGTH)),
+        ..default()
+    };
+    let left_edge_pos = center - edge_offset;
+    commands.spawn((
+        left_edge_sprite,
+        Transform::from_xyz(left_edge_pos.x, left_edge_pos.y, ROAD_EDGE_Z)
+            .with_rotation(rotation_quat),
+        RoadEdge { parent_segment },
+        GameEntity,
+    ));
+
+    // Right edge
+    let right_edge_sprite = Sprite {
+        color: UNVISITED_EDGE_COLOR,
+        custom_size: Some(Vec2::new(ROAD_EDGE_WIDTH, ROAD_SEGMENT_LENGTH)),
+        ..default()
+    };
+    let right_edge_pos = center + edge_offset;
+    commands.spawn((
+        right_edge_sprite,
+        Transform::from_xyz(right_edge_pos.x, right_edge_pos.y, ROAD_EDGE_Z)
+            .with_rotation(rotation_quat),
+        RoadEdge { parent_segment },
+        GameEntity,
+    ));
 }
 
 fn spawn_corner_road(
@@ -157,9 +205,9 @@ fn spawn_corner_road(
     };
     let rotation_angle = get_rotation(current_direction) + rotation_offset;
 
-    commands.spawn((
+    let segment_entity = commands.spawn((
         Mesh2d(meshes.add(sector)),
-        MeshMaterial2d(materials.add(ColorMaterial::from(UNVISITED_ROAD_SEGMENT_COLOR))),
+        MeshMaterial2d(materials.add(ColorMaterial::from(ROAD_SEGMENT_COLOR))),
         Transform::from_xyz(pivot.x, pivot.y, CORNER_ROAD_Z)
             .with_rotation(Quat::from_rotation_z(rotation_angle)),
         RoadSegment {
@@ -167,13 +215,65 @@ fn spawn_corner_road(
             direction: current_direction,
         },
         GameEntity,
-    ));
+    )).id();
+
+    // Spawn glowing arc edges for the corner
+    spawn_corner_road_edges(commands, meshes, materials, pivot, rotation_angle, segment_type, segment_entity);
 
     // The new endpoint is calculated from the pivot.
     // We move from the pivot in the direction of the entry vector by half the road width.
     // This effectively traces the other side of the square that bounds the corner.
     let new_endpoint = pivot + entry_vec * (ROAD_WIDTH / 2.0);
     (new_endpoint, exit_direction)
+}
+
+/// Spawns two arc edge meshes for corner road segments (inner and outer arcs)
+fn spawn_corner_road_edges(
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<ColorMaterial>>,
+    pivot: Vec2,
+    rotation_angle: f32,
+    _segment_type: RoadSegmentType,
+    parent_segment: Entity,
+) {
+    // Inner arc edge - placed OUTSIDE the inner edge of the road
+    // The road goes from radius 0 to ROAD_WIDTH, so inner edge is a thin arc just inside radius 0
+    // We need a small arc from 0 to ROAD_EDGE_WIDTH (but this would be inside, not outside)
+    // Actually for "outside", we want edges beyond the road boundaries
+    // Inner edge: arc from -ROAD_EDGE_WIDTH to 0 (but can't have negative radius)
+    // So we skip the inner edge for corners or use a different approach
+
+    // For corners, "outside" means:
+    // - Outer edge: beyond ROAD_WIDTH (from ROAD_WIDTH to ROAD_WIDTH + ROAD_EDGE_WIDTH)
+    // - Inner edge: there's no "outside" on the pivot side, so we skip it
+
+    // Outer arc edge - placed OUTSIDE the outer edge of the road
+    let outer_radius = ROAD_WIDTH + ROAD_EDGE_WIDTH;
+    let outer_inner_radius = ROAD_WIDTH;
+
+    // Create outer arc using a circular sector at outer edge
+    let outer_sector = CircularSector::from_degrees(outer_radius, 90.0);
+    let cutout_sector = CircularSector::from_degrees(outer_inner_radius, 90.0);
+
+    // Spawn outer edge (full outer sector)
+    commands.spawn((
+        Mesh2d(meshes.add(outer_sector)),
+        MeshMaterial2d(materials.add(ColorMaterial::from(UNVISITED_EDGE_COLOR))),
+        Transform::from_xyz(pivot.x, pivot.y, ROAD_EDGE_Z)
+            .with_rotation(Quat::from_rotation_z(rotation_angle)),
+        RoadEdge { parent_segment },
+        GameEntity,
+    ));
+
+    // Spawn cutout to create ring effect (same color as background/transparent)
+    commands.spawn((
+        Mesh2d(meshes.add(cutout_sector)),
+        MeshMaterial2d(materials.add(ColorMaterial::from(ROAD_SEGMENT_COLOR))),
+        Transform::from_xyz(pivot.x, pivot.y, ROAD_EDGE_Z + 0.01)
+            .with_rotation(Quat::from_rotation_z(rotation_angle)),
+        GameEntity,
+    ));
 }
 
 pub fn check_car_on_road(
@@ -235,7 +335,7 @@ pub fn check_car_on_road(
 }
 
 /// System to mark road segments as visited when the car touches them and change their color.
-/// Uses Without<Visited> filter to only query unvisited segments (O(1) archetype filtering).
+/// Uses Without<Visited> filter to only query unvisited segments.
 /// A segment is marked visited as soon as any part of the car (any corner) touches it.
 pub fn update_segment_visited_status(
     mut commands: Commands,
@@ -245,17 +345,22 @@ pub fn update_segment_visited_status(
             Entity,
             &Transform,
             &RoadSegment,
+        ),
+        Without<Visited>,
+    >,
+    mut edge_query: Query<
+        (
+            &RoadEdge,
             Option<&mut Sprite>,
             Option<&MeshMaterial2d<ColorMaterial>>,
         ),
-        Without<Visited>,
     >,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     let car_transform = car_query.single().unwrap();
     let car_corners = get_car_corners(car_transform);
 
-    for (entity, road_transform, road_segment, sprite_opt, material_opt) in road_query.iter_mut() {
+    for (entity, road_transform, road_segment) in road_query.iter_mut() {
         // Check if ANY corner of the car is on this segment
         let mut car_touches_segment = false;
 
@@ -283,14 +388,19 @@ pub fn update_segment_visited_status(
             // Insert Visited marker component
             commands.entity(entity).insert(Visited);
 
-            // Update color based on segment type:
-            // - Straight segments use Sprite component
-            // - Corner segments use MeshMaterial2d<ColorMaterial>
-            if let Some(mut sprite) = sprite_opt {
-                sprite.color = VISITED_ROAD_SEGMENT_COLOR;
-            } else if let Some(material_handle) = material_opt {
-                if let Some(material) = materials.get_mut(&material_handle.0) {
-                    material.color = VISITED_ROAD_SEGMENT_COLOR;
+            // Update colors of all edges belonging to this segment
+            for (road_edge, sprite_opt, material_opt) in edge_query.iter_mut() {
+                if road_edge.parent_segment == entity {
+                    // Update color based on edge type:
+                    // - Straight segment edges use Sprite component
+                    // - Corner segment edges use MeshMaterial2d<ColorMaterial>
+                    if let Some(mut sprite) = sprite_opt {
+                        sprite.color = VISITED_EDGE_COLOR;
+                    } else if let Some(material_handle) = material_opt {
+                        if let Some(material) = materials.get_mut(&material_handle.0) {
+                            material.color = VISITED_EDGE_COLOR;
+                        }
+                    }
                 }
             }
         }

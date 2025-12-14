@@ -24,6 +24,11 @@ pub enum GameState {
     LevelComplete,
 }
 
+// -- Bloom Settings -- //
+/// Bloom intensity for the glow effect on unvisited road segments
+/// Lower values for subtle localized glow
+pub const BLOOM_INTENSITY: f32 = 0.45;
+
 // -- Window Settings -- //
 pub const WINDOW_WIDTH: u32 = 1000;
 pub const WINDOW_HEIGHT: u32 = 700;

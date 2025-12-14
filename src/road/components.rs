@@ -29,6 +29,13 @@ pub struct RoadSegment {
     pub direction: Direction,
 }
 
+/// Component for road edge entities (the glowing borders)
+/// Links the edge to its parent road segment
+#[derive(Component)]
+pub struct RoadEdge {
+    pub parent_segment: Entity,
+}
+
 /// Marker component indicating a road segment has been visited by the car
 #[derive(Component)]
 pub struct Visited;

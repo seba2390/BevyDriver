@@ -1,3 +1,5 @@
+use bevy::core_pipeline::tonemapping::{DebandDither, Tonemapping};
+use bevy::post_process::bloom::{Bloom, BloomCompositeMode, BloomPrefilter};
 use bevy::prelude::*;
 
 mod car;
@@ -10,7 +12,7 @@ mod styles;
 
 use car::constants::CAR_HEIGHT;
 use car::systems::{handle_input, move_car, spawn_car};
-use constants::{CurrentLevel, GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
+use constants::{CurrentLevel, GameState, WINDOW_HEIGHT, WINDOW_WIDTH, BLOOM_INTENSITY};
 use hud::systems::{
     check_finish_line_crossing, check_race_finished, check_start_line_crossing,
     handle_off_road_logic, init_race_state, spawn_multiplier_ui, spawn_off_road_ui, spawn_timer_ui,
@@ -83,7 +85,24 @@ fn main() {
 }
 
 fn spawn_camera(mut commands: Commands) {
-    commands.spawn(Camera2d);
+    commands.spawn((
+        Camera2d,
+        Tonemapping::TonyMcMapface,
+        Bloom {
+            intensity: BLOOM_INTENSITY,
+            // Use prefilter to only bloom pixels above threshold (more localized)
+            prefilter: BloomPrefilter {
+                threshold: 1.1,           // Only bloom pixels brighter than 1.0 (HDR)
+                threshold_softness: 0.2,  // Soft transition
+            },
+            // Additive mode works better with prefilter for localized glow
+            composite_mode: BloomCompositeMode::Additive,
+            // Tighten the scatter for more localized glow
+            high_pass_frequency: 0.45,
+            ..default()
+        },
+        DebandDither::Enabled,
+    ));
 }
 
 fn setup_game(
