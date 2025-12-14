@@ -16,6 +16,30 @@ pub const BUTTON_FONT_SIZE: f32 = 33.0;
 pub const PANEL_PADDING: f32 = 50.0;
 
 // ============================================================================
+// Shared Font Sizes
+// ============================================================================
+
+/// Large secondary text (time displays, subtitles)
+pub const LARGE_TEXT_FONT_SIZE: f32 = 36.0;
+/// Medium secondary text (messages, labels)
+pub const MEDIUM_TEXT_FONT_SIZE: f32 = 24.0;
+/// Small text (stats, details)
+pub const SMALL_TEXT_FONT_SIZE: f32 = 18.0;
+/// Extra small text (fine print)
+pub const XSMALL_TEXT_FONT_SIZE: f32 = 16.0;
+
+// ============================================================================
+// Shared Margins/Spacing
+// ============================================================================
+
+/// Standard margin between elements
+pub const STANDARD_MARGIN: f32 = 20.0;
+/// Small margin for tighter spacing
+pub const SMALL_MARGIN: f32 = 10.0;
+/// Large margin for section separation
+pub const LARGE_MARGIN: f32 = 40.0;
+
+// ============================================================================
 // Layout Builders
 // ============================================================================
 

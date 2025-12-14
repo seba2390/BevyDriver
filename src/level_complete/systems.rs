@@ -4,8 +4,14 @@ use bevy::prelude::*;
 use crate::constants::{CurrentLevel, GameState};
 use crate::hud::components::RaceState;
 use crate::level_complete::components::{LevelCompleteButtonAction, OnLevelCompleteScreen};
+use crate::level_complete::constants::{
+    NEW_BEST_FONT_SIZE, NEW_BEST_MARGIN, PLACEHOLDER_HEIGHT, TIME_DISPLAY_FONT_SIZE, TIME_DISPLAY_MARGIN,
+};
 use crate::save::{save_to_file, CurrentSave};
-use crate::styles::colors::{BUTTON_HOVERED_COLOR, BUTTON_NORMAL_COLOR, BUTTON_PRESSED_COLOR, OVERLAY_BACKGROUND_COLOR};
+use crate::styles::colors::{
+    BUTTON_HOVERED_COLOR, BUTTON_NORMAL_COLOR, BUTTON_PRESSED_COLOR, MENU_TEXT_COLOR,
+    OVERLAY_BACKGROUND_COLOR, SUCCESS_TEXT_COLOR,
+};
 use crate::styles::menu::{LARGE_BUTTON_WIDTH, button_node, button_text_style, column_centered, fullscreen_centered, title_style};
 
 // ============================================================================
@@ -64,12 +70,12 @@ fn spawn_time_display(parent: &mut ChildSpawnerCommands, time_str: &str, is_new_
     parent.spawn((
         Text::new(format!("Time: {}", time_str)),
         TextFont {
-            font_size: 36.0,
+            font_size: TIME_DISPLAY_FONT_SIZE,
             ..default()
         },
-        TextColor(Color::srgb(1.0, 1.0, 1.0)),
+        TextColor(MENU_TEXT_COLOR),
         Node {
-            margin: UiRect::bottom(Val::Px(10.0)),
+            margin: UiRect::bottom(Val::Px(TIME_DISPLAY_MARGIN)),
             ..default()
         },
     ));
@@ -78,20 +84,20 @@ fn spawn_time_display(parent: &mut ChildSpawnerCommands, time_str: &str, is_new_
         parent.spawn((
             Text::new("New Best Time!"),
             TextFont {
-                font_size: 24.0,
+                font_size: NEW_BEST_FONT_SIZE,
                 ..default()
             },
-            TextColor(Color::srgb(0.3, 1.0, 0.3)),
+            TextColor(SUCCESS_TEXT_COLOR),
             Node {
-                margin: UiRect::bottom(Val::Px(20.0)),
+                margin: UiRect::bottom(Val::Px(NEW_BEST_MARGIN)),
                 ..default()
             },
         ));
     } else {
         parent.spawn((
             Node {
-                margin: UiRect::bottom(Val::Px(20.0)),
-                height: Val::Px(24.0),
+                margin: UiRect::bottom(Val::Px(NEW_BEST_MARGIN)),
+                height: Val::Px(PLACEHOLDER_HEIGHT),
                 ..default()
             },
         ));

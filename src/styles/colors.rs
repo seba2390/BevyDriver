@@ -12,6 +12,17 @@ pub const BUTTON_HOVERED_COLOR: Color = Color::srgb(0.25, 0.25, 0.25);
 pub const BUTTON_PRESSED_COLOR: Color = Color::srgb(0.35, 0.35, 0.35);
 
 // ============================================================================
+// Shared Text Colors
+// ============================================================================
+
+/// Secondary/muted text color for stats, placeholders, etc.
+pub const SECONDARY_TEXT_COLOR: Color = Color::srgb(0.6, 0.6, 0.6);
+/// Success/positive text color (green)
+pub const SUCCESS_TEXT_COLOR: Color = Color::srgb(0.3, 1.0, 0.3);
+/// Error text color (red)
+pub const ERROR_TEXT_COLOR: Color = Color::srgb(1.0, 0.3, 0.3);
+
+// ============================================================================
 // HUD Colors
 // ============================================================================
 
