@@ -10,7 +10,7 @@ pub enum RoadSegmentType {
 /// A track definition containing the layout and starting position
 pub struct Track {
     /// The sequence of road segments that make up the track
-    pub layout: &'static [RoadSegmentType],
+    pub layout: Vec<RoadSegmentType>,
     /// The starting position of the track (world coordinates)
     pub starting_point: Vec2,
 }

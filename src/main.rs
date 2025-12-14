@@ -156,11 +156,7 @@ fn setup_game(
 ) {
     // Use hardcoded tracks for levels 1-3, random tracks for level 4+
     let track: Track = if current_level.0 <= 3 {
-        let t = get_track(current_level.0);
-        Track {
-            layout: t.layout,
-            starting_point: t.starting_point,
-        }
+        get_track(current_level.0)
     } else {
         // Generate random track with seed based on level number
         let config = TrackGeneratorConfig {
@@ -172,10 +168,8 @@ fn setup_game(
         let generated = generate_random_track(&config)
             .expect("Failed to generate random track");
 
-        // Convert Vec to &'static slice (leaks memory, but acceptable for game sessions)
-        let static_layout: &'static [_] = Box::leak(generated.layout.into_boxed_slice());
         Track {
-            layout: static_layout,
+            layout: generated.layout,
             starting_point: generated.starting_point,
         }
     };

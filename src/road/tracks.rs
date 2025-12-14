@@ -148,27 +148,22 @@ const TRACK_3_LAYOUT: [RoadSegmentType; 147 - 83] = [
 ];
 
 // Shift starting points in units of ROAD_SEGMENT_LENGTH to enforce square fixed-size segments of screen
-pub const TRACK_1: Track = Track {
-    layout: &TRACK_1_LAYOUT,
-    starting_point: Vec2::new(-5.0 * ROAD_SEGMENT_LENGTH, -3.0 * ROAD_SEGMENT_LENGTH),
-};
-
-pub const TRACK_2: Track = Track {
-    layout: &TRACK_2_LAYOUT,
-    starting_point: Vec2::new(-1.0 * ROAD_SEGMENT_LENGTH, -2.0 * ROAD_SEGMENT_LENGTH),
-};
-
-pub const TRACK_3: Track = Track {
-    layout: &TRACK_3_LAYOUT,
-    starting_point: Vec2::new(-2.0 * ROAD_SEGMENT_LENGTH, 0.0),
-};
 
 /// Returns the track for the given level number (1, 2, or 3)
-pub fn get_track(level: usize) -> &'static Track {
+pub fn get_track(level: usize) -> Track {
     match level {
-        1 => &TRACK_1,
-        2 => &TRACK_2,
-        3 => &TRACK_3,
+        1 => Track {
+            layout: TRACK_1_LAYOUT.to_vec(),
+            starting_point: Vec2::new(-5.0 * ROAD_SEGMENT_LENGTH, -3.0 * ROAD_SEGMENT_LENGTH),
+        },
+        2 => Track {
+            layout: TRACK_2_LAYOUT.to_vec(),
+            starting_point: Vec2::new(-1.0 * ROAD_SEGMENT_LENGTH, -2.0 * ROAD_SEGMENT_LENGTH),
+        },
+        3 => Track {
+            layout: TRACK_3_LAYOUT.to_vec(),
+            starting_point: Vec2::new(-2.0 * ROAD_SEGMENT_LENGTH, 0.0),
+        },
         _ => panic!("Invalid level: {}. Only levels 1-3 are available.", level),
     }
 }
