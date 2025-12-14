@@ -3,8 +3,10 @@ use bevy::prelude::*;
 
 use crate::constants::GameState;
 use crate::start_menu::components::{MenuButtonAction, OnMenuScreen};
-use crate::styles::colors::{BUTTON_NORMAL_COLOR, MENU_BACKGROUND_COLOR};
-use crate::styles::menu::{STANDARD_BUTTON_WIDTH, button_node, button_text_style, column_centered, fullscreen_centered, title_style};
+use crate::styles::colors::MENU_BACKGROUND_COLOR;
+use crate::styles::menu::{
+    column_centered, spawn_menu_container, spawn_standard_button, title_style,
+};
 
 // ============================================================================
 // Menu Spawning
@@ -12,35 +14,14 @@ use crate::styles::menu::{STANDARD_BUTTON_WIDTH, button_node, button_text_style,
 
 /// Spawns the main menu UI
 pub fn spawn_menu(mut commands: Commands) {
-    commands
-        .spawn(root_container())
+    spawn_menu_container(&mut commands, OnMenuScreen, MENU_BACKGROUND_COLOR)
         .with_children(|parent| {
-            parent.spawn(menu_panel()).with_children(|parent| {
-                spawn_title(parent);
-                spawn_button(parent, "New Game", MenuButtonAction::NewGame);
-                spawn_button(parent, "Load Game", MenuButtonAction::LoadGame);
-                spawn_button(parent, "Quit", MenuButtonAction::Quit);
+            parent.spawn(column_centered()).with_children(|parent| {
+                parent.spawn((Text::new("Bevy Driver"), title_style()));
+                spawn_standard_button(parent, "New Game", MenuButtonAction::NewGame);
+                spawn_standard_button(parent, "Load Game", MenuButtonAction::LoadGame);
+                spawn_standard_button(parent, "Quit", MenuButtonAction::Quit);
             });
-        });
-}
-
-fn root_container() -> impl Bundle {
-    (fullscreen_centered(), BackgroundColor(MENU_BACKGROUND_COLOR), OnMenuScreen)
-}
-
-fn menu_panel() -> impl Bundle {
-    column_centered()
-}
-
-fn spawn_title(parent: &mut ChildSpawnerCommands) {
-    parent.spawn((Text::new("Bevy Driver"), title_style()));
-}
-
-fn spawn_button(parent: &mut ChildSpawnerCommands, label: &str, action: MenuButtonAction) {
-    parent
-        .spawn((Button, button_node(STANDARD_BUTTON_WIDTH), BackgroundColor(BUTTON_NORMAL_COLOR), action))
-        .with_children(|parent| {
-            parent.spawn((Text::new(label), button_text_style()));
         });
 }
 

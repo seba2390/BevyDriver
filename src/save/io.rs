@@ -3,7 +3,7 @@ use std::fs;
 use std::io;
 use std::path::PathBuf;
 
-use super::SaveData;
+use super::{SaveData, sanitize_filename};
 
 /// Gets the save directory for the game, creating it if necessary
 fn get_save_dir() -> io::Result<PathBuf> {
@@ -78,11 +78,7 @@ pub fn list_saves() -> io::Result<Vec<SaveData>> {
 /// Checks if a save file exists for the given player name
 pub fn save_exists(player_name: &str) -> bool {
     if let Ok(save_dir) = get_save_dir() {
-        let safe_name: String = player_name
-            .chars()
-            .map(|c| if c.is_alphanumeric() || c == '_' || c == '-' { c } else { '_' })
-            .collect();
-        let file_path = save_dir.join(format!("{}.json", safe_name));
+        let file_path = save_dir.join(format!("{}.json", sanitize_filename(player_name)));
         file_path.exists()
     } else {
         false

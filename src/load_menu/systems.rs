@@ -6,12 +6,12 @@ use crate::load_menu::components::{DeleteConfirmation, DeleteConfirmButtonAction
 use crate::load_menu::constants::*;
 use crate::save::{delete_save_file, list_saves, load_from_file, CurrentSave, SaveData};
 use crate::styles::colors::{
-    BUTTON_HOVERED_COLOR, BUTTON_NORMAL_COLOR, BUTTON_PRESSED_COLOR, MENU_BACKGROUND_COLOR, MENU_TEXT_COLOR,
-    OVERLAY_BACKGROUND_COLOR,
+    BUTTON_NORMAL_COLOR, MENU_BACKGROUND_COLOR, MENU_TEXT_COLOR, OVERLAY_BACKGROUND_COLOR,
+    SECONDARY_TEXT_COLOR,
 };
 use crate::styles::menu::{
-    STANDARD_BUTTON_WIDTH, button_text_style, column_centered, fullscreen_centered, title_style,
-    BUTTON_HEIGHT, BUTTON_MARGIN,
+    column_centered, spawn_menu_container, spawn_standard_button, title_style,
+    button_text_style, no_saves_message_bundle, ButtonColors, BUTTON_HEIGHT,
 };
 
 // ============================================================================
@@ -25,50 +25,20 @@ pub fn spawn_load_menu(mut commands: Commands) {
 
     let saves = list_saves().unwrap_or_default();
 
-    commands
-        .spawn(root_container())
+    spawn_menu_container(&mut commands, OnLoadMenuScreen, MENU_BACKGROUND_COLOR)
         .with_children(|parent| {
-            parent.spawn(menu_panel()).with_children(|parent| {
-                spawn_title(parent);
+            parent.spawn((column_centered(), MenuPanel)).with_children(|parent| {
+                parent.spawn((Text::new("Load Game"), title_style()));
 
                 if saves.is_empty() {
-                    spawn_no_saves_message(parent);
+                    parent.spawn((no_saves_message_bundle(), NoSavesMessage));
                 } else {
                     spawn_saves_list(parent, &saves);
                 }
 
-                spawn_button(parent, "Back", LoadMenuButtonAction::Back);
+                spawn_standard_button(parent, "Back", LoadMenuButtonAction::Back);
             });
         });
-}
-
-fn root_container() -> impl Bundle {
-    (fullscreen_centered(), BackgroundColor(MENU_BACKGROUND_COLOR), OnLoadMenuScreen)
-}
-
-fn menu_panel() -> impl Bundle {
-    (column_centered(), MenuPanel)
-}
-
-fn spawn_title(parent: &mut ChildSpawnerCommands) {
-    parent.spawn((Text::new("Load Game"), title_style()));
-}
-
-fn spawn_no_saves_message(parent: &mut ChildSpawnerCommands) {
-    parent.spawn((
-        Text::new("No saved games found.\nStart a new game first!"),
-        TextFont {
-            font_size: NO_SAVES_MESSAGE_FONT_SIZE,
-            ..default()
-        },
-        TextColor(SECONDARY_TEXT_COLOR),
-        TextLayout::new_with_justify(Justify::Center),
-        Node {
-            margin: UiRect::vertical(Val::Px(NO_SAVES_MESSAGE_MARGIN)),
-            ..default()
-        },
-        NoSavesMessage,
-    ));
 }
 
 fn spawn_saves_list(parent: &mut ChildSpawnerCommands, saves: &[SaveData]) {
@@ -161,6 +131,7 @@ fn spawn_save_slot(parent: &mut ChildSpawnerCommands, save: &SaveData) {
                     ..default()
                 },
                 BackgroundColor(DELETE_BUTTON_COLOR),
+                ButtonColors::new(DELETE_BUTTON_COLOR, DELETE_BUTTON_HOVER, DELETE_BUTTON_PRESSED),
                 DeleteButton(filename),
             ))
             .with_children(|btn| {
@@ -180,72 +151,9 @@ fn spawn_save_slot(parent: &mut ChildSpawnerCommands, save: &SaveData) {
 #[derive(Component)]
 pub struct DeleteButton(pub String);
 
-fn spawn_button(parent: &mut ChildSpawnerCommands, label: &str, action: LoadMenuButtonAction) {
-    parent
-        .spawn((
-            Button,
-            Node {
-                width: Val::Px(STANDARD_BUTTON_WIDTH),
-                height: Val::Px(BUTTON_HEIGHT),
-                margin: UiRect::top(Val::Px(BUTTON_MARGIN)),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..default()
-            },
-            BackgroundColor(BUTTON_NORMAL_COLOR),
-            action,
-        ))
-        .with_children(|parent| {
-            parent.spawn((Text::new(label), button_text_style()));
-        });
-}
-
 // ============================================================================
-// Button Interaction
+// Button Actions
 // ============================================================================
-
-/// Handles button hover and press visual feedback for save slots
-pub fn load_menu_button_system(
-    mut slot_query: Query<
-        (&Interaction, &mut BackgroundColor),
-        (Changed<Interaction>, With<SaveSlot>),
-    >,
-    mut action_query: Query<
-        (&Interaction, &mut BackgroundColor),
-        (Changed<Interaction>, With<LoadMenuButtonAction>, Without<SaveSlot>),
-    >,
-    mut delete_query: Query<
-        (&Interaction, &mut BackgroundColor),
-        (Changed<Interaction>, With<DeleteButton>, Without<SaveSlot>, Without<LoadMenuButtonAction>),
-    >,
-) {
-    // Handle save slot buttons
-    for (interaction, mut background_color) in &mut slot_query {
-        *background_color = match *interaction {
-            Interaction::Pressed => BUTTON_PRESSED_COLOR.into(),
-            Interaction::Hovered => BUTTON_HOVERED_COLOR.into(),
-            Interaction::None => BUTTON_NORMAL_COLOR.into(),
-        };
-    }
-
-    // Handle action buttons (Back)
-    for (interaction, mut background_color) in &mut action_query {
-        *background_color = match *interaction {
-            Interaction::Pressed => BUTTON_PRESSED_COLOR.into(),
-            Interaction::Hovered => BUTTON_HOVERED_COLOR.into(),
-            Interaction::None => BUTTON_NORMAL_COLOR.into(),
-        };
-    }
-
-    // Handle delete buttons
-    for (interaction, mut background_color) in &mut delete_query {
-        *background_color = match *interaction {
-            Interaction::Pressed => DELETE_BUTTON_PRESSED.into(),
-            Interaction::Hovered => DELETE_BUTTON_HOVER.into(),
-            Interaction::None => DELETE_BUTTON_COLOR.into(),
-        };
-    }
-}
 
 /// Handles clicking on a save slot to load the game
 pub fn handle_save_slot_click(
@@ -362,6 +270,7 @@ fn spawn_delete_confirmation_overlay(commands: &mut Commands, player_name: &str)
                                 ..default()
                             },
                             BackgroundColor(DELETE_BUTTON_COLOR),
+                            ButtonColors::new(DELETE_BUTTON_COLOR, DELETE_BUTTON_HOVER, DELETE_BUTTON_PRESSED),
                             DeleteConfirmButtonAction::ConfirmDelete,
                         ))
                         .with_children(|btn| {
@@ -393,35 +302,6 @@ fn spawn_delete_confirmation_overlay(commands: &mut Commands, player_name: &str)
                         });
                 });
         });
-}
-
-/// Handles button hover for confirmation dialog buttons
-pub fn delete_confirm_button_system(
-    mut query: Query<
-        (&Interaction, &mut BackgroundColor, &DeleteConfirmButtonAction),
-        (Changed<Interaction>, With<Button>),
-    >,
-) {
-    for (interaction, mut background_color, action) in &mut query {
-        let (normal, hovered, pressed) = match action {
-            DeleteConfirmButtonAction::ConfirmDelete => (
-                DELETE_BUTTON_COLOR,
-                DELETE_BUTTON_HOVER,
-                DELETE_BUTTON_PRESSED,
-            ),
-            DeleteConfirmButtonAction::CancelDelete => (
-                BUTTON_NORMAL_COLOR,
-                BUTTON_HOVERED_COLOR,
-                BUTTON_PRESSED_COLOR,
-            ),
-        };
-
-        *background_color = match *interaction {
-            Interaction::Pressed => pressed.into(),
-            Interaction::Hovered => hovered.into(),
-            Interaction::None => normal.into(),
-        };
-    }
 }
 
 /// Handles confirmation dialog button actions
@@ -464,17 +344,7 @@ pub fn handle_delete_confirm_action(
                             // Insert at index 1 (after title, before Back button) to match spawn_load_menu order
                             if let Ok(panel_entity) = menu_panel.single() {
                                 let message_entity = commands.spawn((
-                                    Text::new("No saved games found.\nStart a new game first!"),
-                                    TextFont {
-                                        font_size: NO_SAVES_MESSAGE_FONT_SIZE,
-                                        ..default()
-                                    },
-                                    TextColor(SECONDARY_TEXT_COLOR),
-                                    TextLayout::new_with_justify(Justify::Center),
-                                    Node {
-                                        margin: UiRect::vertical(Val::Px(NO_SAVES_MESSAGE_MARGIN)),
-                                        ..default()
-                                    },
+                                    no_saves_message_bundle(),
                                     NoSavesMessage,
                                 )).id();
 

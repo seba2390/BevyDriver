@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 
-use crate::styles::colors::SECONDARY_TEXT_COLOR as SHARED_SECONDARY_TEXT_COLOR;
 use crate::styles::menu::{
-    LARGE_MARGIN, MEDIUM_TEXT_FONT_SIZE, SMALL_MARGIN, STANDARD_MARGIN, XSMALL_TEXT_FONT_SIZE,
+    LARGE_MARGIN, SMALL_MARGIN, STANDARD_MARGIN, XSMALL_TEXT_FONT_SIZE,
 };
 
 // ============================================================================
@@ -26,7 +25,6 @@ pub const CONFIRM_BUTTON_SPACING: f32 = STANDARD_MARGIN;
 
 pub const PLAYER_NAME_FONT_SIZE: f32 = 28.0;
 pub const STATS_LINE_FONT_SIZE: f32 = XSMALL_TEXT_FONT_SIZE;
-pub const NO_SAVES_MESSAGE_FONT_SIZE: f32 = MEDIUM_TEXT_FONT_SIZE;
 pub const CONFIRM_MESSAGE_FONT_SIZE: f32 = 32.0;
 pub const DELETE_BUTTON_FONT_SIZE: f32 = 20.0;
 
@@ -37,4 +35,3 @@ pub const DELETE_BUTTON_FONT_SIZE: f32 = 20.0;
 pub const DELETE_BUTTON_COLOR: Color = Color::srgb(0.6, 0.2, 0.2);
 pub const DELETE_BUTTON_HOVER: Color = Color::srgb(0.8, 0.3, 0.3);
 pub const DELETE_BUTTON_PRESSED: Color = Color::srgb(0.9, 0.2, 0.2);
-pub const SECONDARY_TEXT_COLOR: Color = SHARED_SECONDARY_TEXT_COLOR;

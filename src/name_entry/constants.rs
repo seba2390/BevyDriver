@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 
-use crate::styles::colors::ERROR_TEXT_COLOR as SHARED_ERROR_TEXT_COLOR;
 use crate::styles::menu::{MEDIUM_TEXT_FONT_SIZE, SMALL_MARGIN, SMALL_TEXT_FONT_SIZE, STANDARD_MARGIN};
 
 // ============================================================================
@@ -36,4 +35,3 @@ pub const ERROR_TEXT_FONT_SIZE: f32 = SMALL_TEXT_FONT_SIZE;
 pub const INPUT_BACKGROUND_COLOR: Color = Color::srgb(0.2, 0.2, 0.25);
 pub const INPUT_BORDER_COLOR: Color = Color::srgb(0.4, 0.4, 0.5);
 pub const PLACEHOLDER_COLOR: Color = Color::srgb(0.5, 0.5, 0.5);
-pub const ERROR_TEXT_COLOR: Color = SHARED_ERROR_TEXT_COLOR;

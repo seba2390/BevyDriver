@@ -6,11 +6,9 @@ use crate::constants::{CurrentLevel, GameState};
 use crate::name_entry::components::{NameEntryButtonAction, NameInputText, OnNameEntryScreen, PlayerNameInput};
 use crate::name_entry::constants::*;
 use crate::save::{save_exists, save_to_file, CurrentSave, SaveData};
-use crate::styles::colors::{
-    BUTTON_NORMAL_COLOR, MENU_BACKGROUND_COLOR, MENU_TEXT_COLOR,
-};
+use crate::styles::colors::{ERROR_TEXT_COLOR, MENU_BACKGROUND_COLOR, MENU_TEXT_COLOR};
 use crate::styles::menu::{
-    STANDARD_BUTTON_WIDTH, button_node, button_text_style, column_centered, fullscreen_centered, title_style,
+    column_centered, spawn_menu_container, spawn_standard_button, title_style,
     BUTTON_FONT_SIZE,
 };
 
@@ -23,30 +21,17 @@ pub fn spawn_name_entry(mut commands: Commands) {
     // Initialize the player name input resource
     commands.insert_resource(PlayerNameInput::default());
 
-    commands
-        .spawn(root_container())
+    spawn_menu_container(&mut commands, OnNameEntryScreen, MENU_BACKGROUND_COLOR)
         .with_children(|parent| {
-            parent.spawn(menu_panel()).with_children(|parent| {
-                spawn_title(parent);
+            parent.spawn(column_centered()).with_children(|parent| {
+                parent.spawn((Text::new("New Game"), title_style()));
                 spawn_subtitle(parent);
                 spawn_input_field(parent);
                 spawn_error_text(parent);
-                spawn_button(parent, "Start Game", NameEntryButtonAction::StartGame);
-                spawn_button(parent, "Back", NameEntryButtonAction::Back);
+                spawn_standard_button(parent, "Start Game", NameEntryButtonAction::StartGame);
+                spawn_standard_button(parent, "Back", NameEntryButtonAction::Back);
             });
         });
-}
-
-fn root_container() -> impl Bundle {
-    (fullscreen_centered(), BackgroundColor(MENU_BACKGROUND_COLOR), OnNameEntryScreen)
-}
-
-fn menu_panel() -> impl Bundle {
-    column_centered()
-}
-
-fn spawn_title(parent: &mut ChildSpawnerCommands) {
-    parent.spawn((Text::new("New Game"), title_style()));
 }
 
 fn spawn_subtitle(parent: &mut ChildSpawnerCommands) {
@@ -113,14 +98,6 @@ fn spawn_error_text(parent: &mut ChildSpawnerCommands) {
 /// Marker for the error text display
 #[derive(Component)]
 pub struct ErrorText;
-
-fn spawn_button(parent: &mut ChildSpawnerCommands, label: &str, action: NameEntryButtonAction) {
-    parent
-        .spawn((Button, button_node(STANDARD_BUTTON_WIDTH), BackgroundColor(BUTTON_NORMAL_COLOR), action))
-        .with_children(|parent| {
-            parent.spawn((Text::new(label), button_text_style()));
-        });
-}
 
 // ============================================================================
 // Keyboard Input Handling

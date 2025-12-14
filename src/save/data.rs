@@ -62,12 +62,16 @@ impl SaveData {
 
     /// Generates a safe filename from the player name
     pub fn filename(&self) -> String {
-        let safe_name: String = self.player_name
-            .chars()
-            .map(|c| if c.is_alphanumeric() || c == '_' || c == '-' { c } else { '_' })
-            .collect();
-        format!("{}.json", safe_name)
+        format!("{}.json", sanitize_filename(&self.player_name))
     }
+}
+
+/// Sanitizes a string for use as a filename by replacing invalid characters with underscores.
+/// Keeps alphanumeric characters, underscores, and hyphens.
+pub fn sanitize_filename(name: &str) -> String {
+    name.chars()
+        .map(|c| if c.is_alphanumeric() || c == '_' || c == '-' { c } else { '_' })
+        .collect()
 }
 
 /// Resource to track the currently active save game

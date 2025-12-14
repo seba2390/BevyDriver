@@ -30,7 +30,7 @@ use level_complete::components::OnLevelCompleteScreen;
 use load_menu::components::OnLoadMenuScreen;
 use load_menu::systems::{
     cleanup_load_menu, handle_delete_click, handle_save_slot_click, load_menu_action,
-    load_menu_button_system, spawn_load_menu, delete_confirm_button_system, handle_delete_confirm_action,
+    spawn_load_menu, handle_delete_confirm_action,
 };
 use name_entry::components::OnNameEntryScreen;
 use name_entry::systems::{
@@ -88,10 +88,9 @@ fn main() {
         .add_systems(
             Update,
             (
-                load_menu_button_system,
+                standard_button_system,
                 handle_save_slot_click,
                 handle_delete_click,
-                delete_confirm_button_system,
                 handle_delete_confirm_action,
                 load_menu_action,
             )

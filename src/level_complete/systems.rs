@@ -9,10 +9,11 @@ use crate::level_complete::constants::{
 };
 use crate::save::{save_to_file, CurrentSave};
 use crate::styles::colors::{
-    BUTTON_NORMAL_COLOR, MENU_TEXT_COLOR,
-    OVERLAY_BACKGROUND_COLOR, SUCCESS_TEXT_COLOR,
+    MENU_TEXT_COLOR, OVERLAY_BACKGROUND_COLOR, SUCCESS_TEXT_COLOR,
 };
-use crate::styles::menu::{LARGE_BUTTON_WIDTH, button_node, button_text_style, column_centered, fullscreen_centered, title_style};
+use crate::styles::menu::{
+    column_centered, spawn_menu_container, spawn_button_with_width, title_style, LARGE_BUTTON_WIDTH,
+};
 
 // ============================================================================
 // Level Complete Menu Spawning
@@ -40,30 +41,17 @@ pub fn spawn_level_complete_menu(
         .map(|t| format!("{:.2}s", t))
         .unwrap_or_else(|| "N/A".to_string());
 
-    commands
-        .spawn(root_container())
+    spawn_menu_container(&mut commands, OnLevelCompleteScreen, OVERLAY_BACKGROUND_COLOR)
         .with_children(|parent| {
-            parent.spawn(menu_panel()).with_children(|parent| {
-                spawn_title(parent);
+            parent.spawn(column_centered()).with_children(|parent| {
+                parent.spawn((Text::new("Level Complete!"), title_style()));
                 spawn_time_display(parent, &final_time_str, new_best);
-                spawn_button(parent, "Restart Level", LevelCompleteButtonAction::RestartLevel);
-                spawn_button(parent, "Next Level", LevelCompleteButtonAction::NextLevel);
-                spawn_button(parent, "Main Menu", LevelCompleteButtonAction::MainMenu);
-                spawn_button(parent, "Quit", LevelCompleteButtonAction::Quit);
+                spawn_button_with_width(parent, "Restart Level", LevelCompleteButtonAction::RestartLevel, LARGE_BUTTON_WIDTH);
+                spawn_button_with_width(parent, "Next Level", LevelCompleteButtonAction::NextLevel, LARGE_BUTTON_WIDTH);
+                spawn_button_with_width(parent, "Main Menu", LevelCompleteButtonAction::MainMenu, LARGE_BUTTON_WIDTH);
+                spawn_button_with_width(parent, "Quit", LevelCompleteButtonAction::Quit, LARGE_BUTTON_WIDTH);
             });
         });
-}
-
-fn root_container() -> impl Bundle {
-    (fullscreen_centered(), BackgroundColor(OVERLAY_BACKGROUND_COLOR), OnLevelCompleteScreen)
-}
-
-fn menu_panel() -> impl Bundle {
-    column_centered()
-}
-
-fn spawn_title(parent: &mut ChildSpawnerCommands) {
-    parent.spawn((Text::new("Level Complete!"), title_style()));
 }
 
 fn spawn_time_display(parent: &mut ChildSpawnerCommands, time_str: &str, is_new_best: bool) {
@@ -102,14 +90,6 @@ fn spawn_time_display(parent: &mut ChildSpawnerCommands, time_str: &str, is_new_
             },
         ));
     }
-}
-
-fn spawn_button(parent: &mut ChildSpawnerCommands, label: &str, action: LevelCompleteButtonAction) {
-    parent
-        .spawn((Button, button_node(LARGE_BUTTON_WIDTH), BackgroundColor(BUTTON_NORMAL_COLOR), action))
-        .with_children(|parent| {
-            parent.spawn((Text::new(label), button_text_style()));
-        });
 }
 
 // ============================================================================
