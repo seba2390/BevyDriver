@@ -8,6 +8,7 @@ mod hud;
 mod level_complete;
 mod load_menu;
 mod name_entry;
+mod pause_menu;
 mod save;
 mod start_menu;
 mod road;
@@ -16,7 +17,7 @@ mod utils;
 
 use car::constants::CAR_HEIGHT;
 use car::systems::{handle_input, move_car, spawn_car};
-use constants::{CurrentLevel, GameState, WINDOW_HEIGHT, WINDOW_WIDTH, BLOOM_INTENSITY};
+use constants::{CurrentLevel, GameState, ResumeFromPause, WINDOW_HEIGHT, WINDOW_WIDTH, BLOOM_INTENSITY};
 use hud::systems::{
     check_finish_line_crossing, check_race_finished, check_start_line_crossing,
     handle_off_road_logic, init_race_state, spawn_multiplier_ui, spawn_off_road_ui, spawn_timer_ui,
@@ -27,6 +28,10 @@ use level_complete::systems::{
     spawn_level_complete_menu,
 };
 use level_complete::components::OnLevelCompleteScreen;
+use pause_menu::components::OnPauseMenuScreen;
+use pause_menu::systems::{
+    handle_pause_input, handle_resume_input, pause_menu_action, spawn_pause_menu,
+};
 use load_menu::components::OnLoadMenuScreen;
 use load_menu::systems::{
     cleanup_load_menu, handle_delete_click, handle_save_slot_click, load_menu_action,
@@ -65,6 +70,8 @@ fn main() {
         .init_resource::<CurrentLevel>()
         // Initialize current save resource
         .init_resource::<CurrentSave>()
+        // Initialize resume from pause flag
+        .init_resource::<ResumeFromPause>()
         // Spawn camera once on startup (persists across states)
         .add_systems(Startup, spawn_camera)
         // Menu state systems
@@ -97,7 +104,10 @@ fn main() {
                 .run_if(in_state(GameState::LoadGameMenu)),
         )
         // Playing state systems
-        .add_systems(OnEnter(GameState::Playing), setup_game)
+        .add_systems(OnEnter(GameState::Playing), (
+            setup_game.run_if(not(resuming_from_pause)),
+            clear_resume_flag,
+        ).chain())
         // Note: Game cleanup happens in cleanup_level_complete_menu to keep track visible during overlay
         .add_systems(
             Update,
@@ -113,8 +123,17 @@ fn main() {
                 update_timer_display,
                 update_multiplier_display,
                 check_race_finished,
+                handle_pause_input,
             )
                 .run_if(in_state(GameState::Playing)),
+        )
+        // Paused state systems
+        .add_systems(OnEnter(GameState::Paused), spawn_pause_menu)
+        .add_systems(OnExit(GameState::Paused), despawn_all::<OnPauseMenuScreen>)
+        .add_systems(
+            Update,
+            (standard_button_system, pause_menu_action, handle_resume_input)
+                .run_if(in_state(GameState::Paused)),
         )
         // Level Complete state systems
         .add_systems(OnEnter(GameState::LevelComplete), spawn_level_complete_menu)
@@ -146,6 +165,16 @@ fn spawn_camera(mut commands: Commands) {
         },
         DebandDither::Enabled,
     ));
+}
+
+/// Run condition: returns true if we're resuming from pause
+fn resuming_from_pause(resume_flag: Res<ResumeFromPause>) -> bool {
+    resume_flag.0
+}
+
+/// Clears the resume flag after entering Playing state
+fn clear_resume_flag(mut resume_flag: ResMut<ResumeFromPause>) {
+    resume_flag.0 = false;
 }
 
 fn setup_game(

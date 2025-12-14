@@ -11,6 +11,11 @@ impl Default for CurrentLevel {
     }
 }
 
+// -- Resume Flag -- //
+/// Resource to track whether we're resuming from pause (skip setup) or starting fresh
+#[derive(Resource, Default)]
+pub struct ResumeFromPause(pub bool);
+
 // -- Game State -- //
 /// Global game state enum for managing menu and gameplay transitions
 #[derive(Clone, Copy, Default, Eq, PartialEq, Debug, Hash, States)]
@@ -24,6 +29,8 @@ pub enum GameState {
     LoadGameMenu,
     /// Active gameplay - race in progress
     Playing,
+    /// Game is paused (overlay on top of gameplay)
+    Paused,
     /// Level complete screen (shown when race finishes)
     LevelComplete,
 }
