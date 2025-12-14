@@ -6,6 +6,7 @@ mod car;
 mod constants;
 mod hud;
 mod level_complete;
+mod level_menu;
 mod load_menu;
 mod name_entry;
 mod pause_menu;
@@ -28,6 +29,8 @@ use level_complete::systems::{
     spawn_level_complete_menu,
 };
 use level_complete::components::OnLevelCompleteScreen;
+use level_menu::components::OnLevelMenuScreen;
+use level_menu::systems::{level_menu_action, spawn_level_menu};
 use pause_menu::components::OnPauseMenuScreen;
 use pause_menu::systems::{
     handle_pause_input, handle_resume_input, pause_menu_action, spawn_pause_menu,
@@ -102,6 +105,13 @@ fn main() {
                 load_menu_action,
             )
                 .run_if(in_state(GameState::LoadGameMenu)),
+        )
+        // Level Menu state systems
+        .add_systems(OnEnter(GameState::LevelMenu), spawn_level_menu)
+        .add_systems(OnExit(GameState::LevelMenu), despawn_all::<OnLevelMenuScreen>)
+        .add_systems(
+            Update,
+            (standard_button_system, level_menu_action).run_if(in_state(GameState::LevelMenu)),
         )
         // Playing state systems
         .add_systems(OnEnter(GameState::Playing), (

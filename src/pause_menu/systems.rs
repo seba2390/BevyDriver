@@ -20,6 +20,7 @@ pub fn spawn_pause_menu(mut commands: Commands) {
             parent.spawn(column_centered()).with_children(|parent| {
                 parent.spawn((Text::new("Paused"), title_style()));
                 spawn_button_with_width(parent, "Resume", PauseMenuButtonAction::Resume, LARGE_BUTTON_WIDTH);
+                spawn_button_with_width(parent, "Level Menu", PauseMenuButtonAction::LevelMenu, LARGE_BUTTON_WIDTH);
                 spawn_button_with_width(parent, "Main Menu", PauseMenuButtonAction::MainMenu, LARGE_BUTTON_WIDTH);
                 spawn_button_with_width(parent, "Quit", PauseMenuButtonAction::Quit, LARGE_BUTTON_WIDTH);
             });
@@ -74,6 +75,13 @@ pub fn pause_menu_action(
                 PauseMenuButtonAction::Resume => {
                     resume_flag.0 = true;
                     game_state.set(GameState::Playing);
+                }
+                PauseMenuButtonAction::LevelMenu => {
+                    // Clean up game entities when going to level menu
+                    for entity in &game_entities {
+                        commands.entity(entity).despawn();
+                    }
+                    game_state.set(GameState::LevelMenu);
                 }
                 PauseMenuButtonAction::MainMenu => {
                     // Clean up game entities when returning to main menu

@@ -8,6 +8,7 @@ pub struct OnPauseMenuScreen;
 #[derive(Component)]
 pub enum PauseMenuButtonAction {
     Resume,
+    LevelMenu,
     MainMenu,
     Quit,
 }

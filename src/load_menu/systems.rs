@@ -171,7 +171,8 @@ pub fn handle_save_slot_click(
             if let Ok(save_data) = load_from_file(&save_slot.0) {
                 current_level.0 = save_data.highest_level_unlocked;
                 current_save.set(save_data);
-                game_state.set(GameState::Playing);
+                // Navigate to level menu instead of directly to gameplay
+                game_state.set(GameState::LevelMenu);
             }
         }
     }

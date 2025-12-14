@@ -27,6 +27,8 @@ pub enum GameState {
     NewGameNameEntry,
     /// Load game menu (shown when loading a saved game)
     LoadGameMenu,
+    /// Level selection menu (shows completed levels and times)
+    LevelMenu,
     /// Active gameplay - race in progress
     Playing,
     /// Game is paused (overlay on top of gameplay)
