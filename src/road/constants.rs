@@ -15,7 +15,7 @@ pub const ROAD_EDGE_Z: f32 = 1.2;
 /// Base road color (always this color, no glow)
 pub const ROAD_SEGMENT_COLOR: Color = Color::srgb(0.3, 0.3, 0.3);
 /// Emissive color for visited road edges (values > 1.0 for bloom glow)
-pub const VISITED_EDGE_COLOR: Color = Color::srgb(1.0, 1.0, 1.6);
+pub const VISITED_EDGE_COLOR: Color = Color::srgb(1.0, 1.0, 2.8);
 /// Color for unvisited road edges (no glow)
 pub const UNVISITED_EDGE_COLOR: Color = Color::srgb(0.3, 0.3, 0.3);
 
