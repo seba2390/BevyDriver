@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use rand::Rng;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
+use rayon::prelude::*;
 use std::collections::HashSet;
 
 use crate::constants::{WINDOW_HEIGHT, WINDOW_WIDTH};
@@ -49,8 +50,8 @@ pub fn max_grid_segments() -> usize {
 impl Default for TrackGeneratorConfig {
     fn default() -> Self {
         Self {
-            min_segments: 30,
-            max_segments: 100,
+            min_segments: 70,
+            max_segments: 150,
             target_difficulty: 0.5,
             seed: 42,
         }
@@ -124,16 +125,33 @@ pub fn generate_random_track(config: &TrackGeneratorConfig) -> Option<GeneratedT
     // Validate config - will panic with descriptive message if invalid
     config.validate();
 
-    let mut rng = ChaCha8Rng::seed_from_u64(config.seed);
-
     // Grid bounds based on window size (with margin for road width)
     let margin = 2; // Keep 2 segments away from edges
     let half_width = (WINDOW_WIDTH as f32 / 2.0 / ROAD_SEGMENT_LENGTH) as i32 - margin;
     let half_height = (WINDOW_HEIGHT as f32 / 2.0 / ROAD_SEGMENT_LENGTH) as i32 - margin;
 
-    // Try multiple times with fresh starts
-    for _attempt in 0..100 {
-        if let Some(track) = try_generate_track(&mut rng, config, half_width, half_height) {
+    // Helper to run a batch of attempts in parallel
+    let run_batch = |base_seed: u64| {
+        // Try 1000 attempts in parallel
+        (0..1000).into_par_iter().find_map_any(|i| {
+            // Derive a unique seed for this attempt
+            let attempt_seed = base_seed.wrapping_add(i as u64);
+            let mut rng = ChaCha8Rng::seed_from_u64(attempt_seed);
+            
+            try_generate_track(&mut rng, config, half_width, half_height)
+        })
+    };
+
+    // First try with the configured seed
+    if let Some(track) = run_batch(config.seed) {
+        return Some(track);
+    }
+
+    // Fallback: If the initial seed failed, try a few other seeds
+    for fallback_i in 1..=5 {
+        let fallback_seed = config.seed.wrapping_add((fallback_i * 10000) as u64);
+        if let Some(track) = run_batch(fallback_seed) {
+            warn!("Track generation required fallback seed (attempt batch {})", fallback_i);
             return Some(track);
         }
     }

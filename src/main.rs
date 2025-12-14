@@ -125,8 +125,8 @@ fn setup_game(
     } else {
         // Generate random track with seed based on level number
         let config = TrackGeneratorConfig {
-            min_segments: 20,
-            max_segments: 150,
+            min_segments: 50,
+            max_segments: 120,
             target_difficulty: 0.5,
             seed: current_level.0 as u64,
         };
