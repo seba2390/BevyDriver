@@ -68,7 +68,7 @@ pub fn spawn_multiplier_ui(commands: &mut Commands) {
 }
 
 /// Initialize the race state resource
-pub fn init_race_state(mut commands: Commands, car_start_y: f32) {
+pub fn init_race_state(commands: &mut Commands, car_start_y: f32) {
     commands.insert_resource(RaceState {
         stopwatch: Stopwatch::new(),
         status: RaceStatus::WaitingToStart,
