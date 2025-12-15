@@ -30,8 +30,8 @@ pub const CONTROLS_HINT_FONT_SIZE: f32 = 18.0;
 pub const CONTROLS_HINT_PADDING: f32 = 15.0;
 /// Vertical spacing between control hint lines
 pub const CONTROLS_HINT_LINE_HEIGHT: f32 = 24.0;
-/// Horizontal offset for text (leaves room for arrow gizmos)
-pub const CONTROLS_HINT_TEXT_OFFSET: f32 = 35.0;
+/// Horizontal offset for text (leaves room for arrow gizmos, aligned with "SPACE  " width)
+pub const CONTROLS_HINT_TEXT_OFFSET: f32 = 76.0;
 /// Initial alpha for controls hint (semi-transparent)
 pub const CONTROLS_HINT_ALPHA: f32 = 0.7;
 /// RGB color value for controls hint text
@@ -69,5 +69,41 @@ pub const ARROW_STEER_OFFSET: f32 = 6.0;
 /// Velocity threshold squared to detect if player has moved
 pub const PLAYER_MOVED_VELOCITY_THRESHOLD: f32 = 10.0;
 
-/// Labels for each control hint line
-pub const CONTROL_LABELS: [&str; 4] = ["Accelerate", "Steer", "Brake", "ESC  Pause"];
+/// Labels for each control hint line (key on left, action on right)
+pub const CONTROL_LABELS: [&str; 5] = [
+    "Accelerate",
+    "Steer",
+    "Brake",
+    "ESC    Pause",
+    "SPACE  Powerup",
+];
+
+// ============================================================================
+// NOS Boost Bar Constants
+// ============================================================================
+
+/// Width of the NOS boost bar
+pub const NOS_BAR_WIDTH: f32 = 300.0;
+/// Height of the NOS boost bar
+pub const NOS_BAR_HEIGHT: f32 = 24.0;
+/// Distance from top of screen (calculated to center-align with timer)
+/// Timer center Y = HUD_PADDING + HUD_FONT_SIZE/2
+/// NOS bar center Y = NOS_BAR_TOP + NOS_BAR_HEIGHT/2
+/// To align: NOS_BAR_TOP = HUD_PADDING + HUD_FONT_SIZE/2 - NOS_BAR_HEIGHT/2
+pub const NOS_BAR_TOP: f32 = HUD_PADDING + HUD_FONT_SIZE / 2.0 - NOS_BAR_HEIGHT / 2.0;
+/// Border width for the bar container (UI element, non-glowing)
+pub const NOS_BAR_BORDER: f32 = 2.0;
+/// Background color for the bar container (dark)
+pub const NOS_BAR_BG_COLOR: Color = Color::srgba(0.1, 0.1, 0.1, 0.8);
+/// Fill color for the bar (white)
+pub const NOS_BAR_FILL_COLOR: Color = Color::srgb(1.0, 1.0, 1.0);
+/// Border color for the bar (non-glowing UI border - dark to not interfere with glow)
+pub const NOS_BAR_BORDER_COLOR: Color = Color::srgba(0.0, 0.0, 0.0, 0.0);
+
+// -- NOS Boost Bar Glow (Sprite-based for bloom effect) -- //
+/// Glow edge thickness (matches powerup thickness)
+pub const NOS_BAR_GLOW_THICKNESS: f32 = 2.0;
+/// Glow edge color (HDR cyan matching powerup: values > 1.0 for bloom)
+pub const NOS_BAR_GLOW_COLOR: Color = Color::srgb(0.0, 1.7, 1.7);
+/// Z-index for glow sprites (above most game elements)
+pub const NOS_BAR_GLOW_Z: f32 = 100.0;

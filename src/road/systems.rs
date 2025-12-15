@@ -1,17 +1,20 @@
 use bevy::math::primitives::CircularSector;
 use bevy::prelude::*;
+use rand::prelude::*;
 
 use crate::car::components::Car;
 use crate::car::constants::CAR_HEIGHT;
 use crate::car::helpers::get_car_corners;
+use crate::collision::world_to_local_2d;
 use crate::start_menu::components::GameEntity;
 use crate::road::components::{
     Direction, FinishLine, RoadEdge, RoadSegment, RoadSegmentType, StartLine, Track, Visited,
 };
+use crate::props::systems::spawn_nos_powerup;
 use crate::road::constants::*;
 use crate::road::helpers::{
     get_direction_vector, get_exit_direction, get_position_offset, get_rotation,
-    is_point_in_segment, world_to_local_2d,
+    is_point_in_segment,
 };
 
 /// Helper to spawn a line marker (start or finish line)
@@ -38,7 +41,7 @@ pub fn spawn_start_line(commands: &mut Commands, position: Vec2, direction: Dire
     spawn_line_marker(
         commands,
         Vec3::new(position.x, position.y + CAR_HEIGHT, STARTING_LINE_Z),
-        Color::srgb(0.2, 0.8, 0.2), // Green
+        START_LINE_COLOR,
         StartLine { direction },
     );
 }
@@ -48,7 +51,7 @@ pub fn spawn_finish_line(commands: &mut Commands, position: Vec2, direction: Dir
     spawn_line_marker(
         commands,
         Vec3::new(position.x, position.y, STARTING_LINE_Z),
-        Color::srgb(1.0, 1.0, 1.0), // White
+        FINISH_LINE_COLOR,
         FinishLine { direction },
     );
 }
@@ -67,7 +70,9 @@ pub fn spawn_track(
     );
     let mut current_direction = Direction::Up;
 
-    for &segment_type in track.layout.iter() {
+    for (i, &segment_type) in track.layout.iter().enumerate() {
+        let spawn_prop_here = track.prop_indices.contains(&i);
+
         match segment_type {
             RoadSegmentType::Straight => {
                 current_endpoint = spawn_straight_road(
@@ -75,6 +80,7 @@ pub fn spawn_track(
                     current_endpoint,
                     current_direction,
                     segment_type,
+                    spawn_prop_here,
                 );
             }
             RoadSegmentType::CornerLeft | RoadSegmentType::CornerRight => {
@@ -85,6 +91,7 @@ pub fn spawn_track(
                     current_endpoint,
                     current_direction,
                     segment_type,
+                    spawn_prop_here,
                 );
                 current_endpoint = new_endpoint;
                 current_direction = new_direction;
@@ -98,11 +105,21 @@ fn spawn_straight_road(
     current_endpoint: Vec2,
     current_direction: Direction,
     segment_type: RoadSegmentType,
+    spawn_prop: bool,
 ) -> Vec2 {
     // Calculate the offset for the straight segment
     let offset = get_position_offset(current_direction);
     // The center of the segment is halfway along the offset from the current endpoint
     let center = current_endpoint + offset / 2.0;
+
+    if spawn_prop {
+        let mut rng = rand::rng();
+        // Randomly place on left or right side (offset by 1/4 road width)
+        let side_multiplier = if rng.random_bool(0.5) { 1.0 } else { -1.0 };
+        // perp() gives vector to the Left. So + is Left, - is Right.
+        let offset_vec = get_direction_vector(current_direction).perp() * side_multiplier * (ROAD_WIDTH / 4.0);
+        spawn_nos_powerup(commands, center + offset_vec);
+    }
 
     let road_sprite = Sprite {
         color: ROAD_SEGMENT_COLOR,
@@ -176,6 +193,7 @@ fn spawn_corner_road(
     current_endpoint: Vec2,
     current_direction: Direction,
     segment_type: RoadSegmentType,
+    spawn_prop: bool,
 ) -> (Vec2, Direction) {
     let exit_direction = get_exit_direction(current_direction, segment_type);
     let exit_vec = get_direction_vector(exit_direction);
@@ -185,6 +203,38 @@ fn spawn_corner_road(
     // We move perpendicular to the entry direction (which is the exit direction for a 90 degree turn)
     // by half the road width to find the inner corner pivot.
     let pivot = current_endpoint + exit_vec * (ROAD_WIDTH / 2.0);
+
+    if spawn_prop {
+        let mut rng = rand::rng();
+        // Randomly place on inner or outer lane
+        // Inner lane is closer to pivot (radius - offset), Outer is further (radius + offset)
+        // Since pivot is at the inner corner, the road center is at radius ROAD_WIDTH/2.
+        // So we want radius = ROAD_WIDTH/2 +/- ROAD_WIDTH/4.
+        let radius_offset = if rng.random_bool(0.5) { ROAD_WIDTH / 4.0 } else { -ROAD_WIDTH / 4.0 };
+
+        // Place prop at the midpoint of the turn (45 degrees)
+        // Vector from pivot to entry point (length is ROAD_WIDTH/2)
+        let pivot_to_entry = current_endpoint - pivot;
+
+        // Normalize to get direction from pivot
+        let pivot_dir = pivot_to_entry.normalize();
+
+        // Rotate 45 degrees towards exit
+        let angle = match segment_type {
+            RoadSegmentType::CornerRight => -std::f32::consts::FRAC_PI_4, // Clockwise
+            RoadSegmentType::CornerLeft => std::f32::consts::FRAC_PI_4,   // Counter-clockwise
+            _ => 0.0,
+        };
+
+        let rotation = Quat::from_rotation_z(angle);
+        let rotated_dir = rotation.mul_vec3(pivot_dir.extend(0.0)).xy();
+
+        // Calculate position at the correct radius
+        let target_radius = (ROAD_WIDTH / 2.0) + radius_offset;
+        let midpoint = pivot + rotated_dir * target_radius;
+
+        spawn_nos_powerup(commands, midpoint);
+    }
 
     // Create a 90-degree circular sector
     let sector = CircularSector::from_degrees(ROAD_WIDTH, 90.0);

@@ -155,14 +155,17 @@ pub fn get_track(level: usize) -> Track {
         1 => Track {
             layout: TRACK_1_LAYOUT.to_vec(),
             starting_point: Vec2::new(-5.0 * ROAD_SEGMENT_LENGTH, -3.0 * ROAD_SEGMENT_LENGTH),
+            prop_indices: vec![10, 25],
         },
         2 => Track {
             layout: TRACK_2_LAYOUT.to_vec(),
             starting_point: Vec2::new(-1.0 * ROAD_SEGMENT_LENGTH, -2.0 * ROAD_SEGMENT_LENGTH),
+            prop_indices: vec![20, 50],
         },
         3 => Track {
             layout: TRACK_3_LAYOUT.to_vec(),
             starting_point: Vec2::new(-2.0 * ROAD_SEGMENT_LENGTH, 0.0),
+            prop_indices: vec![15, 40, 70],
         },
         _ => panic!("Invalid level: {}. Only levels 1-3 are available.", level),
     }

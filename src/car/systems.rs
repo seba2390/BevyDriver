@@ -1,4 +1,4 @@
-use crate::car::components::{Car, Velocity};
+use crate::car::components::{Car, NosBoostAvailable, Velocity};
 use crate::car::constants::*;
 use crate::constants::{BOTTOM_BOUNDARY, LEFT_BOUNDARY, RIGHT_BOUNDARY, TOP_BOUNDARY};
 use crate::start_menu::components::GameEntity;
@@ -39,13 +39,16 @@ pub fn spawn_car(commands: &mut Commands, starting_point: Vec2) {
 // Movement System
 // ============================================================================
 
-pub fn move_car(mut query: Query<(&mut Transform, &mut Velocity), With<Car>>, time: Res<Time>) {
+pub fn move_car(
+    mut query: Query<(&mut Transform, &mut Velocity, Option<&NosBoostAvailable>), With<Car>>,
+    time: Res<Time>,
+) {
     let delta = time.delta_secs();
 
-    for (mut transform, mut velocity) in query.iter_mut() {
+    for (mut transform, mut velocity, boost) in query.iter_mut() {
         apply_lateral_friction(&transform, &mut velocity);
         apply_rolling_friction(&mut velocity, delta);
-        clamp_speed(&mut velocity);
+        clamp_speed(&mut velocity, boost);
         update_position(&mut transform, &velocity, delta);
         clamp_position(&mut transform, &mut velocity);
     }
@@ -79,8 +82,13 @@ fn apply_rolling_friction(velocity: &mut Velocity, delta: f32) {
 }
 
 /// Clamps the car's speed to the maximum allowed.
-fn clamp_speed(velocity: &mut Velocity) {
-    velocity.0 = velocity.0.clamp_length_max(CAR_MAX_SPEED);
+/// Uses boosted max speed if NOS boost is active.
+fn clamp_speed(velocity: &mut Velocity, boost: Option<&NosBoostAvailable>) {
+    let max_speed = match boost {
+        Some(b) if b.active => NOS_BOOSTED_MAX_SPEED,
+        _ => CAR_MAX_SPEED,
+    };
+    velocity.0 = velocity.0.clamp_length_max(max_speed);
 }
 
 /// Updates the car's position based on its current velocity.
@@ -202,4 +210,34 @@ fn get_acceleration_input(keyboard: &ButtonInput<KeyCode>) -> f32 {
         input -= CAR_ACCELERATION;
     }
     input
+}
+
+// ============================================================================
+// NOS Boost System
+// ============================================================================
+
+/// System to update NOS boost availability timer and handle SPACE activation.
+/// - Ticks the availability timer (boost window counting down)
+/// - Sets active=true while SPACE is held (if boost is available)
+/// - Removes NosBoostAvailable component when timer expires
+pub fn update_nos_boost(
+    mut commands: Commands,
+    keyboard: Res<ButtonInput<KeyCode>>,
+    time: Res<Time>,
+    mut query: Query<(Entity, &mut NosBoostAvailable), With<Car>>,
+) {
+    for (entity, mut boost) in query.iter_mut() {
+        // Tick the availability timer
+        boost.timer.tick(time.delta());
+
+        // Activate boost while SPACE is held (only if timer hasn't expired)
+        boost.active = keyboard.pressed(KeyCode::Space) && !boost.timer.is_finished();
+
+        // Remove component when availability window expires
+        if boost.timer.is_finished() {
+            commands.entity(entity).remove::<NosBoostAvailable>();
+        }
+
+        // TODO: Spawn particle trail while boost.active is true
+    }
 }

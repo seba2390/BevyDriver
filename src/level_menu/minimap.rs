@@ -142,6 +142,7 @@ pub fn get_level_track(level: usize) -> Track {
         Track {
             layout: generated.layout,
             starting_point: generated.starting_point,
+            prop_indices: generated.prop_indices,
         }
     }
 }

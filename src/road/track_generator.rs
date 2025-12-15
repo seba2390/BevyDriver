@@ -20,6 +20,8 @@ pub struct GeneratedTrack {
     pub layout: Vec<RoadSegmentType>,
     /// The starting position of the track (world coordinates)
     pub starting_point: Vec2,
+    /// Indices of segments where props should be placed
+    pub prop_indices: Vec<usize>,
 }
 
 /// Configuration for random track generation
@@ -206,7 +208,7 @@ fn try_generate_track<R: Rng>(
         if layout.len() >= config.min_segments {
             if let Some(closing_segment) = can_close_loop(current_pos, current_dir, &visited) {
                 layout.push(closing_segment);
-                return Some(finalize_track(layout));
+                return Some(finalize_track(layout, rng));
             }
         }
 
@@ -413,8 +415,8 @@ fn choose_segment<R: Rng>(
     valid_moves[rng.random_range(0..valid_moves.len())]
 }
 
-/// Finalize the track by computing starting point
-fn finalize_track(layout: Vec<RoadSegmentType>) -> GeneratedTrack {
+/// Finalize the track by computing starting point and generating prop indices
+fn finalize_track<R: Rng + ?Sized>(layout: Vec<RoadSegmentType>, rng: &mut R) -> GeneratedTrack {
     // Calculate the bounding box of the track path
     let mut current_pos = IVec2::ZERO;
     let mut current_dir = Direction::Up;
@@ -443,8 +445,35 @@ fn finalize_track(layout: Vec<RoadSegmentType>) -> GeneratedTrack {
         -center_y * ROAD_SEGMENT_LENGTH,
     );
 
+    // Generate prop indices
+    let track_length = layout.len();
+    let min_separation = track_length / 5;
+    let num_props = rng.random_range(1..=3);
+
+    let mut prop_indices = Vec::new();
+    let mut attempts = 0;
+
+    while prop_indices.len() < num_props && attempts < 100 {
+        let idx = rng.random_range(0..track_length);
+
+        let mut valid = true;
+        for &existing_idx in &prop_indices {
+            let dist = (idx as isize - existing_idx as isize).abs();
+            if dist < min_separation as isize {
+                valid = false;
+                break;
+            }
+        }
+
+        if valid {
+            prop_indices.push(idx);
+        }
+        attempts += 1;
+    }
+
     GeneratedTrack {
         layout,
         starting_point,
+        prop_indices,
     }
 }

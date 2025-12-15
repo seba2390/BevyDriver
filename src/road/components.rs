@@ -13,6 +13,8 @@ pub struct Track {
     pub layout: Vec<RoadSegmentType>,
     /// The starting position of the track (world coordinates)
     pub starting_point: Vec2,
+    /// Indices of segments where props should be placed
+    pub prop_indices: Vec<usize>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -26,7 +28,6 @@ pub enum Direction {
 #[derive(Component)]
 pub struct RoadSegment {
     pub segment_type: RoadSegmentType,
-    #[allow(dead_code)]
     pub direction: Direction,
 }
 

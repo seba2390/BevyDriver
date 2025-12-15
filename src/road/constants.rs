@@ -18,6 +18,8 @@ pub const ROAD_SEGMENT_COLOR: Color = Color::srgb(0.3, 0.3, 0.3);
 pub const VISITED_EDGE_COLOR: Color = Color::srgb(1.0, 1.0, 2.8);
 /// Color for unvisited road edges (no glow)
 pub const UNVISITED_EDGE_COLOR: Color = Color::srgb(0.3, 0.3, 0.3);
+pub const START_LINE_COLOR: Color = Color::srgb(0.2, 0.8, 0.2);
+pub const FINISH_LINE_COLOR: Color = Color::srgb(1.0, 1.0, 1.0);
 
 /// Z-index for the starting line (above road segments)
 pub const STARTING_LINE_Z: f32 = 1.5;

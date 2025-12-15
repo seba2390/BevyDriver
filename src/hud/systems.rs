@@ -2,23 +2,26 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
 use crate::car::components::Car;
+use crate::car::components::NosBoostAvailable;
 use crate::car::components::Velocity;
 use crate::constants::{CurrentLevel, GameState, WINDOW_HEIGHT, WINDOW_WIDTH};
 use crate::hud::components::{
-    ControlsHint, LevelText, MultiplierText, OffRoadText, RaceState, RaceStatus, TimerText,
+    ControlsHint, LevelText, MultiplierText, NosBoostBarContainer, NosBoostBarFill,
+    NosBoostBarGlow, RaceState, RaceStatus, TimerText,
 };
 use crate::hud::constants::{
     ARROW_BASE_X_OFFSET, ARROW_BASE_Y_OFFSET, ARROW_HEAD_SIZE, ARROW_SIZE, ARROW_STEER_OFFSET,
     ARROW_VERTICAL_OFFSET, CONTROLS_FADE_DELAY, CONTROLS_FADE_DURATION, CONTROLS_HINT_ALPHA,
     CONTROLS_HINT_LINE_HEIGHT, CONTROLS_HINT_PADDING, CONTROLS_HINT_RGB, CONTROL_LABELS,
-    OFF_ROAD_TIME_MULTIPLIER, PLAYER_MOVED_VELOCITY_THRESHOLD,
+    NOS_BAR_GLOW_COLOR, NOS_BAR_GLOW_THICKNESS, NOS_BAR_GLOW_Z, NOS_BAR_HEIGHT, NOS_BAR_TOP,
+    NOS_BAR_WIDTH, OFF_ROAD_TIME_MULTIPLIER, PLAYER_MOVED_VELOCITY_THRESHOLD,
 };
 use crate::hud::helpers::{format_elapsed_time, has_crossed_line, is_within_line_x_bounds};
 use crate::road::components::{Direction, FinishLine, RoadSegment, StartLine, Visited};
 use crate::start_menu::components::GameEntity;
 use crate::styles::hud::{
-    controls_hint_line_style, level_text_style, multiplier_style, off_road_warning_style,
-    timer_color, timer_style,
+    controls_hint_line_style, level_text_style, multiplier_style, nos_bar_container_colors,
+    nos_bar_container_style, nos_bar_fill_color, nos_bar_fill_style, timer_color, timer_style,
 };
 
 use crate::utils::spawn_hud_element;
@@ -31,17 +34,6 @@ pub fn spawn_level_text_ui(commands: &mut Commands, current_level: &CurrentLevel
         level_text_style(),
         LevelText,
         Visibility::Inherited,
-    );
-}
-
-/// Spawns the off-road warning UI element
-pub fn spawn_off_road_ui(commands: &mut Commands) {
-    spawn_hud_element(
-        commands,
-        "Off the road!".to_string(),
-        off_road_warning_style(),
-        OffRoadText,
-        Visibility::Hidden,
     );
 }
 
@@ -60,7 +52,7 @@ pub fn spawn_timer_ui(commands: &mut Commands) {
 pub fn spawn_multiplier_ui(commands: &mut Commands) {
     spawn_hud_element(
         commands,
-        format!("(x{})", OFF_ROAD_TIME_MULTIPLIER as i32),
+        format!("Off the road! (x{})", OFF_ROAD_TIME_MULTIPLIER as i32),
         multiplier_style(),
         MultiplierText,
         Visibility::Hidden,
@@ -170,22 +162,9 @@ pub fn update_timer_display(
     }
 }
 
-/// Handles showing/hiding the off-road warning based on car position
-pub fn handle_off_road_logic(
-    In(is_on_road): In<bool>,
-    mut race_state: ResMut<RaceState>,
-    mut query: Query<&mut Visibility, With<OffRoadText>>,
-) {
-    // Update race state with current road status
+/// Updates the race state with current road status (used for time multiplier)
+pub fn handle_off_road_logic(In(is_on_road): In<bool>, mut race_state: ResMut<RaceState>) {
     race_state.is_on_road = is_on_road;
-
-    if let Ok(mut visibility) = query.single_mut() {
-        if is_on_road {
-            *visibility = Visibility::Hidden;
-        } else {
-            *visibility = Visibility::Visible;
-        }
-    }
 }
 
 /// System to update the multiplier display visibility based on road status
@@ -275,8 +254,8 @@ pub fn render_controls_hint_arrows(mut gizmos: Gizmos, hint_query: Query<&Contro
     let base_x = -(WINDOW_WIDTH as f32) / 2.0 + CONTROLS_HINT_PADDING + ARROW_BASE_X_OFFSET;
     let base_y = -(WINDOW_HEIGHT as f32) / 2.0 + CONTROLS_HINT_PADDING + ARROW_BASE_Y_OFFSET;
 
-    // Line 0: Up arrow (Accelerate) - top line
-    let line0_y = base_y + CONTROLS_HINT_LINE_HEIGHT * 3.0;
+    // Line 0: Up arrow (Accelerate) - top line (5 lines total, so offset by 4)
+    let line0_y = base_y + CONTROLS_HINT_LINE_HEIGHT * 4.0;
     draw_arrow_2d(
         &mut gizmos,
         Vec2::new(base_x, line0_y - ARROW_VERTICAL_OFFSET),
@@ -286,7 +265,7 @@ pub fn render_controls_hint_arrows(mut gizmos: Gizmos, hint_query: Query<&Contro
     );
 
     // Line 1: Left and Right arrows (Steer)
-    let line1_y = base_y + CONTROLS_HINT_LINE_HEIGHT * 2.0;
+    let line1_y = base_y + CONTROLS_HINT_LINE_HEIGHT * 3.0;
     draw_arrow_2d(
         &mut gizmos,
         Vec2::new(base_x - ARROW_STEER_OFFSET, line1_y),
@@ -303,7 +282,7 @@ pub fn render_controls_hint_arrows(mut gizmos: Gizmos, hint_query: Query<&Contro
     );
 
     // Line 2: Down arrow (Brake)
-    let line2_y = base_y + CONTROLS_HINT_LINE_HEIGHT * 1.0;
+    let line2_y = base_y + CONTROLS_HINT_LINE_HEIGHT * 2.0;
     draw_arrow_2d(
         &mut gizmos,
         Vec2::new(base_x, line2_y + ARROW_VERTICAL_OFFSET),
@@ -312,7 +291,7 @@ pub fn render_controls_hint_arrows(mut gizmos: Gizmos, hint_query: Query<&Contro
         color,
     );
 
-    // Line 3: ESC text (no arrow needed, relies on text label)
+    // Lines 3-4: ESC and SPACE text (no arrows needed)
 }
 
 /// Updates the controls hint - fades out after delay or when player moves
@@ -359,6 +338,174 @@ pub fn update_controls_hint(
                 color.0 =
                     Color::srgba(CONTROLS_HINT_RGB.0, CONTROLS_HINT_RGB.1, CONTROLS_HINT_RGB.2, alpha);
             }
+        }
+    }
+}
+
+// ============================================================================
+// NOS Boost Bar HUD
+// ============================================================================
+
+/// Spawns the NOS boost bar container (initially hidden, shown when boost is available)
+pub fn spawn_nos_boost_bar(commands: &mut Commands) {
+    let (bg_color, border_color) = nos_bar_container_colors();
+
+    commands
+        .spawn((
+            nos_bar_container_style(),
+            bg_color,
+            border_color,
+            Visibility::Hidden,
+            NosBoostBarContainer,
+            GameEntity,
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                nos_bar_fill_style(),
+                nos_bar_fill_color(),
+                NosBoostBarFill,
+            ));
+        });
+}
+
+/// Spawns the NOS boost bar glow sprites (world-space for bloom effect).
+/// Creates 4 sprite edges around the bar that will bloom like the powerup.
+pub fn spawn_nos_boost_bar_glow(commands: &mut Commands) {
+    // Calculate total bar dimensions including the glow border
+    let total_width = NOS_BAR_WIDTH + NOS_BAR_GLOW_THICKNESS;
+    let total_height = NOS_BAR_HEIGHT + NOS_BAR_GLOW_THICKNESS;
+
+    // Calculate offsets for each edge
+    let top_offset_y = total_height / 2.0 - NOS_BAR_GLOW_THICKNESS / 2.0;
+    let bottom_offset_y = -total_height / 2.0 + NOS_BAR_GLOW_THICKNESS / 2.0;
+    let left_offset_x = -total_width / 2.0 + NOS_BAR_GLOW_THICKNESS / 2.0;
+    let right_offset_x = total_width / 2.0 - NOS_BAR_GLOW_THICKNESS / 2.0;
+
+    // Top edge
+    commands.spawn((
+        Sprite {
+            color: NOS_BAR_GLOW_COLOR,
+            custom_size: Some(Vec2::new(total_width, NOS_BAR_GLOW_THICKNESS)),
+            ..default()
+        },
+        Transform::from_xyz(0.0, 0.0, NOS_BAR_GLOW_Z),
+        Visibility::Hidden,
+        NosBoostBarGlow {
+            offset_x: 0.0,
+            offset_y: top_offset_y,
+        },
+        GameEntity,
+    ));
+
+    // Bottom edge
+    commands.spawn((
+        Sprite {
+            color: NOS_BAR_GLOW_COLOR,
+            custom_size: Some(Vec2::new(total_width, NOS_BAR_GLOW_THICKNESS)),
+            ..default()
+        },
+        Transform::from_xyz(0.0, 0.0, NOS_BAR_GLOW_Z),
+        Visibility::Hidden,
+        NosBoostBarGlow {
+            offset_x: 0.0,
+            offset_y: bottom_offset_y,
+        },
+        GameEntity,
+    ));
+
+    // Left edge
+    commands.spawn((
+        Sprite {
+            color: NOS_BAR_GLOW_COLOR,
+            custom_size: Some(Vec2::new(NOS_BAR_GLOW_THICKNESS, total_height)),
+            ..default()
+        },
+        Transform::from_xyz(0.0, 0.0, NOS_BAR_GLOW_Z),
+        Visibility::Hidden,
+        NosBoostBarGlow {
+            offset_x: left_offset_x,
+            offset_y: 0.0,
+        },
+        GameEntity,
+    ));
+
+    // Right edge
+    commands.spawn((
+        Sprite {
+            color: NOS_BAR_GLOW_COLOR,
+            custom_size: Some(Vec2::new(NOS_BAR_GLOW_THICKNESS, total_height)),
+            ..default()
+        },
+        Transform::from_xyz(0.0, 0.0, NOS_BAR_GLOW_Z),
+        Visibility::Hidden,
+        NosBoostBarGlow {
+            offset_x: right_offset_x,
+            offset_y: 0.0,
+        },
+        GameEntity,
+    ));
+}
+
+/// Updates the NOS boost bar glow sprites to follow the camera and match visibility.
+/// The glow sprites are positioned in world-space relative to the camera center.
+pub fn update_nos_boost_bar_glow(
+    car_query: Query<&NosBoostAvailable, With<Car>>,
+    camera_query: Query<&Transform, With<Camera2d>>,
+    mut glow_query: Query<(&mut Transform, &mut Visibility, &NosBoostBarGlow), Without<Camera2d>>,
+) {
+    let Ok(camera_transform) = camera_query.single() else {
+        return;
+    };
+
+    let camera_pos = camera_transform.translation.truncate();
+
+    // Calculate bar center position relative to camera (top center of screen)
+    // The bar is centered horizontally and positioned from the top
+    let bar_center_x = camera_pos.x;
+    let bar_center_y = camera_pos.y + (WINDOW_HEIGHT as f32) / 2.0 - NOS_BAR_TOP - NOS_BAR_HEIGHT / 2.0;
+
+    // Determine if boost is available (for visibility)
+    let boost_visible = car_query.iter().next().is_some();
+
+    for (mut transform, mut visibility, glow) in glow_query.iter_mut() {
+        // Update visibility
+        *visibility = if boost_visible {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
+
+        // Update position based on stored offsets
+        transform.translation.x = bar_center_x + glow.offset_x;
+        transform.translation.y = bar_center_y + glow.offset_y;
+    }
+}
+
+/// Updates the NOS boost bar visibility and fill width based on boost availability.
+/// Shows the bar when NosBoostAvailable exists on the car, hides it otherwise.
+/// The fill width shrinks as the availability timer counts down.
+pub fn update_nos_boost_bar(
+    car_query: Query<&NosBoostAvailable, With<Car>>,
+    mut container_query: Query<&mut Visibility, With<NosBoostBarContainer>>,
+    mut fill_query: Query<&mut Node, With<NosBoostBarFill>>,
+) {
+    let Ok(mut container_visibility) = container_query.single_mut() else {
+        return;
+    };
+
+    match car_query.iter().next() {
+        Some(boost) => {
+            // Show the bar
+            *container_visibility = Visibility::Visible;
+
+            // Update fill width based on remaining time
+            if let Ok(mut fill_node) = fill_query.single_mut() {
+                fill_node.width = Val::Percent(boost.remaining_fraction() * 100.0);
+            }
+        }
+        None => {
+            // Hide the bar when no boost is available
+            *container_visibility = Visibility::Hidden;
         }
     }
 }

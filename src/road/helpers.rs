@@ -94,16 +94,6 @@ pub fn get_direction_vector(direction: Direction) -> Vec2 {
     }
 }
 
-/// Transform a world-space point to local 2D coordinates relative to a transform.
-/// This is commonly used for checking if points are inside road segments.
-pub fn world_to_local_2d(transform: &Transform, world_point: Vec3) -> Vec2 {
-    transform
-        .compute_affine()
-        .inverse()
-        .transform_point3(world_point)
-        .xy()
-}
-
 /// Check if a point (in local space) is inside a road segment of the given type.
 /// Dispatches to the appropriate geometry check based on segment type.
 pub fn is_point_in_segment(local_pos: Vec2, segment_type: RoadSegmentType) -> bool {

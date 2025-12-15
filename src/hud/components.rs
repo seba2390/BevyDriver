@@ -1,13 +1,9 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
-/// Marker component for the "Off the road!" warning text
+/// Marker component for the level text
 #[derive(Component)]
 pub struct LevelText;
-
-/// Marker component for the "Off the road!" warning text
-#[derive(Component)]
-pub struct OffRoadText;
 
 /// Marker component for the lap timer display text
 #[derive(Component)]
@@ -16,6 +12,24 @@ pub struct TimerText;
 /// Marker component for the time multiplier indicator text
 #[derive(Component)]
 pub struct MultiplierText;
+
+/// Marker component for the NOS boost availability bar container
+#[derive(Component)]
+pub struct NosBoostBarContainer;
+
+/// Marker component for the NOS boost availability bar fill
+#[derive(Component)]
+pub struct NosBoostBarFill;
+
+/// Component for the NOS bar glow sprites (world-space for bloom effect).
+/// Stores the relative offset from the bar center for positioning.
+#[derive(Component)]
+pub struct NosBoostBarGlow {
+    /// Relative X offset from bar center
+    pub offset_x: f32,
+    /// Relative Y offset from bar center
+    pub offset_y: f32,
+}
 
 /// Component for the controls hint that fades out
 #[derive(Component)]

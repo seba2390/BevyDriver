@@ -7,7 +7,8 @@ use bevy::prelude::*;
 use crate::constants::GameState;
 use systems::{
     check_race_finished, check_start_line_crossing, render_controls_hint_arrows, tick_race_timer,
-    update_controls_hint, update_multiplier_display, update_timer_display,
+    update_controls_hint, update_multiplier_display, update_nos_boost_bar,
+    update_nos_boost_bar_glow, update_timer_display,
 };
 
 pub struct HudPlugin;
@@ -21,6 +22,8 @@ impl Plugin for HudPlugin {
                 tick_race_timer,
                 update_timer_display,
                 update_multiplier_display,
+                update_nos_boost_bar,
+                update_nos_boost_bar_glow,
                 update_controls_hint,
                 render_controls_hint_arrows,
                 check_race_finished,

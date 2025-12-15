@@ -4,13 +4,15 @@ use crate::car::systems::spawn_car;
 use crate::constants::{CurrentLevel, GameState, ResumeFromPause};
 use crate::hud::systems::{
     check_finish_line_crossing, handle_off_road_logic, init_race_state, spawn_controls_hint,
-    spawn_level_text_ui, spawn_multiplier_ui, spawn_off_road_ui, spawn_timer_ui,
+    spawn_level_text_ui, spawn_multiplier_ui, spawn_nos_boost_bar, spawn_nos_boost_bar_glow,
+    spawn_timer_ui,
 };
 use crate::road::components::{Direction, Track};
 use crate::road::systems::{
     check_car_on_road, spawn_finish_line, spawn_start_line, spawn_track,
     update_segment_visited_status,
 };
+use crate::props::systems::{rotate_powerups, check_powerup_collision};
 use crate::road::track_generator::{generate_random_track, TrackGeneratorConfig};
 use crate::road::tracks::get_track;
 
@@ -27,6 +29,8 @@ impl Plugin for GamePlugin {
             (
                 check_car_on_road.pipe(handle_off_road_logic),
                 (update_segment_visited_status, check_finish_line_crossing).chain(),
+                rotate_powerups,
+                check_powerup_collision,
             )
                 .run_if(in_state(GameState::Playing)),
         );
@@ -66,6 +70,7 @@ fn setup_game(
         Track {
             layout: generated.layout,
             starting_point: generated.starting_point,
+            prop_indices: generated.prop_indices,
         }
     };
 
@@ -83,9 +88,10 @@ fn setup_game(
     );
     spawn_finish_line(&mut commands, finish_position, Direction::Up);
 
-    spawn_off_road_ui(&mut commands);
     spawn_timer_ui(&mut commands);
     spawn_multiplier_ui(&mut commands);
+    spawn_nos_boost_bar(&mut commands);
+    spawn_nos_boost_bar_glow(&mut commands);
     spawn_controls_hint(&mut commands);
     spawn_level_text_ui(&mut commands, &current_level);
     init_race_state(&mut commands, track.starting_point.y);

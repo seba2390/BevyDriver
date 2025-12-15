@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use bevy_scrollbar::ScrollbarPlugin;
 
 mod car;
+mod collision;
 mod constants;
 mod game_plugin;
 mod hud;
@@ -12,6 +13,7 @@ mod level_menu;
 mod load_menu;
 mod name_entry;
 mod pause_menu;
+mod props;
 mod save;
 mod start_menu;
 mod road;
