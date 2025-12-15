@@ -21,46 +21,50 @@ use crate::styles::hud::{
     timer_color, timer_style,
 };
 
+use crate::utils::spawn_hud_element;
+
 /// Spawns the off the road level text UI element
 pub fn spawn_level_text_ui(commands: &mut Commands, current_level: &CurrentLevel) {
-    commands.spawn((
-        Text::new(format!("Level {}", current_level.0)),
+    spawn_hud_element(
+        commands,
+        format!("Level {}", current_level.0),
         level_text_style(),
         LevelText,
-        GameEntity,
-    ));
+        Visibility::Inherited,
+    );
 }
 
 /// Spawns the off-road warning UI element
 pub fn spawn_off_road_ui(commands: &mut Commands) {
-    commands.spawn((
-        Text::new("Off the road!"),
+    spawn_hud_element(
+        commands,
+        "Off the road!".to_string(),
         off_road_warning_style(),
-        Visibility::Hidden,
         OffRoadText,
-        GameEntity,
-    ));
+        Visibility::Hidden,
+    );
 }
 
 /// Spawns the timer UI element in the upper right corner
 pub fn spawn_timer_ui(commands: &mut Commands) {
-    commands.spawn((
-        Text::new("0.00"),
+    spawn_hud_element(
+        commands,
+        "0.00".to_string(),
         timer_style(),
         TimerText,
-        GameEntity,
-    ));
+        Visibility::Inherited,
+    );
 }
 
 /// Spawns the multiplier indicator UI element below the timer
 pub fn spawn_multiplier_ui(commands: &mut Commands) {
-    commands.spawn((
-        Text::new(format!("(x{})", OFF_ROAD_TIME_MULTIPLIER as i32)),
+    spawn_hud_element(
+        commands,
+        format!("(x{})", OFF_ROAD_TIME_MULTIPLIER as i32),
         multiplier_style(),
-        Visibility::Hidden,
         MultiplierText,
-        GameEntity,
-    ));
+        Visibility::Hidden,
+    );
 }
 
 /// Initialize the race state resource

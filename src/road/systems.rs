@@ -14,44 +14,43 @@ use crate::road::helpers::{
     is_point_in_segment, world_to_local_2d,
 };
 
-/// Spawns the start line at the given position
-pub fn spawn_start_line(commands: &mut Commands, position: Vec2, direction: Direction) {
-    let start_line_sprite = Sprite {
-        color: Color::srgb(0.2, 0.8, 0.2), // Green
+/// Helper to spawn a line marker (start or finish line)
+fn spawn_line_marker<T: Component>(
+    commands: &mut Commands,
+    position: Vec3,
+    color: Color,
+    marker: T,
+) {
+    let sprite = Sprite {
+        color,
         custom_size: Some(Vec2::new(STARTING_LINE_WIDTH, STARTING_LINE_HEIGHT)),
         ..default()
     };
+    let transform = Transform::from_xyz(position.x, position.y, position.z);
+
+    commands.spawn((sprite, transform, marker, GameEntity));
+}
+
+/// Spawns the start line at the given position
+pub fn spawn_start_line(commands: &mut Commands, position: Vec2, direction: Direction) {
     // Place the starting line CAR_HEIGHT ahead of the starting point
     // This mirrors the finish line which is CAR_HEIGHT behind the starting point
-    let start_line_transform = Transform::from_xyz(
-        position.x,
-        position.y + CAR_HEIGHT,
-        STARTING_LINE_Z,
-    );
-
-    commands.spawn((
-        start_line_sprite,
-        start_line_transform,
+    spawn_line_marker(
+        commands,
+        Vec3::new(position.x, position.y + CAR_HEIGHT, STARTING_LINE_Z),
+        Color::srgb(0.2, 0.8, 0.2), // Green
         StartLine { direction },
-        GameEntity,
-    ));
+    );
 }
 
 /// Spawns the finish line at the given position
 pub fn spawn_finish_line(commands: &mut Commands, position: Vec2, direction: Direction) {
-    let finish_line_sprite = Sprite {
-        color: Color::srgb(1.0, 1.0, 1.0), // White (checkered pattern would be ideal but simple for now)
-        custom_size: Some(Vec2::new(STARTING_LINE_WIDTH, STARTING_LINE_HEIGHT)),
-        ..default()
-    };
-    let finish_line_transform = Transform::from_xyz(position.x, position.y, STARTING_LINE_Z);
-
-    commands.spawn((
-        finish_line_sprite,
-        finish_line_transform,
+    spawn_line_marker(
+        commands,
+        Vec3::new(position.x, position.y, STARTING_LINE_Z),
+        Color::srgb(1.0, 1.0, 1.0), // White
         FinishLine { direction },
-        GameEntity,
-    ));
+    );
 }
 
 pub fn spawn_track(
@@ -129,6 +128,26 @@ fn spawn_straight_road(
     current_endpoint + offset
 }
 
+/// Helper to spawn a single road edge
+fn spawn_edge(
+    commands: &mut Commands,
+    position: Vec2,
+    rotation_quat: Quat,
+    parent_segment: Entity,
+) {
+    let edge_sprite = Sprite {
+        color: UNVISITED_EDGE_COLOR,
+        custom_size: Some(Vec2::new(ROAD_EDGE_WIDTH, ROAD_SEGMENT_LENGTH)),
+        ..default()
+    };
+    commands.spawn((
+        edge_sprite,
+        Transform::from_xyz(position.x, position.y, ROAD_EDGE_Z).with_rotation(rotation_quat),
+        RoadEdge { parent_segment },
+        GameEntity,
+    ));
+}
+
 /// Spawns two edge sprites on either side of a straight road segment
 fn spawn_straight_road_edges(
     commands: &mut Commands,
@@ -144,34 +163,10 @@ fn spawn_straight_road_edges(
     let edge_offset = perpendicular * (ROAD_WIDTH / 2.0 + ROAD_EDGE_WIDTH / 2.0);
 
     // Left edge
-    let left_edge_sprite = Sprite {
-        color: UNVISITED_EDGE_COLOR,
-        custom_size: Some(Vec2::new(ROAD_EDGE_WIDTH, ROAD_SEGMENT_LENGTH)),
-        ..default()
-    };
-    let left_edge_pos = center - edge_offset;
-    commands.spawn((
-        left_edge_sprite,
-        Transform::from_xyz(left_edge_pos.x, left_edge_pos.y, ROAD_EDGE_Z)
-            .with_rotation(rotation_quat),
-        RoadEdge { parent_segment },
-        GameEntity,
-    ));
+    spawn_edge(commands, center - edge_offset, rotation_quat, parent_segment);
 
     // Right edge
-    let right_edge_sprite = Sprite {
-        color: UNVISITED_EDGE_COLOR,
-        custom_size: Some(Vec2::new(ROAD_EDGE_WIDTH, ROAD_SEGMENT_LENGTH)),
-        ..default()
-    };
-    let right_edge_pos = center + edge_offset;
-    commands.spawn((
-        right_edge_sprite,
-        Transform::from_xyz(right_edge_pos.x, right_edge_pos.y, ROAD_EDGE_Z)
-            .with_rotation(rotation_quat),
-        RoadEdge { parent_segment },
-        GameEntity,
-    ));
+    spawn_edge(commands, center + edge_offset, rotation_quat, parent_segment);
 }
 
 fn spawn_corner_road(

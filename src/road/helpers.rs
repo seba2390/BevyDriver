@@ -15,46 +15,35 @@ pub fn is_point_in_straight(local_pos: Vec2) -> bool {
         && local_pos.y <= half_h
 }
 
-/// Check if a point (in local space) is inside a right corner segment.
-///
-/// The CircularSector primitive is created with a 90° arc centered on the +Y axis,
-/// meaning it spans from 45° to 135° when measured from the +X axis (using atan2).
-///
-/// While the corner is rotated by +PI/4 in world space during spawning, the inverse
-/// transform in check_car_on_road brings us back to this original local orientation.
-/// Therefore, we check if the angle falls within PI/4 to 3*PI/4 (45° to 135°).
-pub fn is_point_in_corner_right(local_pos: Vec2) -> bool {
+/// Check if a point (in local space) is inside a corner segment defined by an angle range.
+pub fn is_point_in_corner(local_pos: Vec2, angle_range: std::ops::RangeInclusive<f32>) -> bool {
     let distance = local_pos.length();
     if distance > ROAD_WIDTH {
         return false;
     }
     // atan2(y, x) gives angle from +X axis in range [-PI, PI]
     let angle = local_pos.y.atan2(local_pos.x);
+    angle_range.contains(&angle)
+}
+
+/// Check if a point (in local space) is inside a right corner segment.
+pub fn is_point_in_corner_right(local_pos: Vec2) -> bool {
     // Sector centered on +Y axis spans PI/4 (45°) to 3*PI/4 (135°)
-    (std::f32::consts::FRAC_PI_4..=(std::f32::consts::FRAC_PI_4 + std::f32::consts::FRAC_PI_2))
-        .contains(&angle)
+    is_point_in_corner(
+        local_pos,
+        std::f32::consts::FRAC_PI_4..=(std::f32::consts::FRAC_PI_4 + std::f32::consts::FRAC_PI_2),
+    )
 }
 
 /// Check if a point (in local space) is inside a left corner segment.
-///
-/// The CircularSector primitive is created with a 90° arc centered on the +Y axis,
-/// meaning it spans from 45° to 135° when measured from the +X axis (using atan2).
-///
-/// While the corner is rotated by -PI/4 in world space during spawning, the inverse
-/// transform in check_car_on_road brings us back to this original local orientation.
-/// Therefore, we check if the angle falls within PI/4 to 3*PI/4 (45° to 135°),
-/// which is the same as CornerRight since both use the same CircularSector primitive.
 pub fn is_point_in_corner_left(local_pos: Vec2) -> bool {
-    let distance = local_pos.length();
-    if distance > ROAD_WIDTH {
-        return false;
-    }
-    // atan2(y, x) gives angle from +X axis in range [-PI, PI]
-    let angle = local_pos.y.atan2(local_pos.x);
     // Sector centered on +Y axis spans PI/4 (45°) to 3*PI/4 (135°)
-    ((std::f32::consts::FRAC_PI_2 - std::f32::consts::FRAC_PI_4)
-        ..=(std::f32::consts::PI - std::f32::consts::FRAC_PI_4))
-        .contains(&angle)
+    // Same as CornerRight since both use the same CircularSector primitive
+    is_point_in_corner(
+        local_pos,
+        (std::f32::consts::FRAC_PI_2 - std::f32::consts::FRAC_PI_4)
+            ..=(std::f32::consts::PI - std::f32::consts::FRAC_PI_4),
+    )
 }
 
 /// Given an entry direction and segment type, return the exit direction
