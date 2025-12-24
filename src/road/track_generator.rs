@@ -146,7 +146,11 @@ pub fn generate_random_track(config: &TrackGeneratorConfig) -> Option<GeneratedT
     // Helper to run a batch of attempts in parallel
     let run_batch = |base_seed: u64| {
         // Try 1000 attempts in parallel
-        (0..1000).into_par_iter().find_map_any(|i| {
+        // IMPORTANT: Use find_map_first (not find_map_any) for deterministic results.
+        // find_map_any returns whichever thread finishes first, which is non-deterministic.
+        // find_map_first returns the first successful result by index order, ensuring
+        // the same track is generated every time for the same seed.
+        (0..1000).into_par_iter().find_map_first(|i| {
             // Derive a unique seed for this attempt using hash-based derivation
             // This prevents overlap between different levels' seed ranges
             let attempt_seed = derive_seed(base_seed, i as u64);
